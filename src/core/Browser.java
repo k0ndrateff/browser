@@ -6,7 +6,7 @@ public class Browser {
     public static void main(String[] args) {
         URL url = new URL(Browser.DEFAULT_URL);
 
-        if (!args[0].isEmpty()) {
+        if (args.length > 0) {
             url = new URL(args[0]);
         }
 
