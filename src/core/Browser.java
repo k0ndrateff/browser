@@ -11,5 +11,7 @@ public class Browser {
         }
 
         PageController.load(url);
+
+        PageController.shutdown();
     }
 }

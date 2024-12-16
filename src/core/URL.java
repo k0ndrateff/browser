@@ -1,5 +1,6 @@
 package core;
 
+import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.File;
 import java.io.FileInputStream;
@@ -9,6 +10,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class URL {
     private final String scheme;
@@ -17,6 +20,9 @@ public class URL {
     private short port;
     private String dataContent;
     private boolean isViewSource;
+
+    private static final Map<String, Socket> socketPool = new ConcurrentHashMap<>();
+    private static final Map<String, SSLSocket> sslSocketPool = new ConcurrentHashMap<>();
 
     public URL(String url) {
         if (url.startsWith("view-source:")) {
@@ -103,7 +109,11 @@ public class URL {
     private String getRequestMessage() {
         Map<String, String> defaultHeaders = new HashMap<>();
         defaultHeaders.put("Host", this.host);
-        defaultHeaders.put("Connection", "close");
+
+        if (Objects.equals(this.scheme, "http")) {
+            defaultHeaders.put("Connection", "Keep-Alive");
+        }
+
         defaultHeaders.put("User-Agent", "k0ndrateff/browser");
 
         StringBuilder req = new StringBuilder("GET " + this.path + " HTTP/1.1\r\n");
@@ -117,31 +127,25 @@ public class URL {
         return req.toString();
     }
 
-    private String processHttpResponse(String response) {
+    private String processHttpStatusLine(String response) {
         String[] lines = response.split("\r\n");
+
         String[] statusLine = lines[0].split(" ");
         String version = statusLine[0];
         String status = statusLine[1];
         String explanation = statusLine[2];
 
+        return lines[0];
+    }
+
+    private Map<String, String> processResponseHeaders(String response) {
+        String[] lines = response.split("\r\n");
+
         Map<String, String> responseHeaders = new HashMap<>();
-        boolean isReadingContent = false;
-        StringBuilder content = new StringBuilder();
 
         for (String line : lines) {
             if (line.startsWith("HTTP")) continue;
-
-            if (isReadingContent) {
-                content.append(line);
-
-                continue;
-            }
-
-            if (line.isEmpty()) {
-                isReadingContent = true;
-
-                continue;
-            }
+            if (line.isEmpty()) break;
 
             String[] headerSplit = line.split(":", 2);
             String header = headerSplit[0];
@@ -153,40 +157,125 @@ public class URL {
         assert !responseHeaders.containsKey("transfer-encoding");
         assert !responseHeaders.containsKey("content-encoding");
 
+        return responseHeaders;
+    }
+
+    private String processHttpBody(String response) {
+        String[] lines = response.split("\r\n");
+
+        boolean isReadingContent = false;
+        StringBuilder content = new StringBuilder();
+
+        for (String line : lines) {
+            if (line.startsWith("HTTP")) continue;
+
+            if (line.isEmpty()) {
+                isReadingContent = true;
+
+                continue;
+            }
+
+            if (isReadingContent) content.append(line);
+        }
+
         return content.toString();
     }
 
+    private static void closeSocket(Socket socket) {
+        if (socket != null) {
+            try {
+                socket.close();
+            } catch (IOException e) {
+                System.err.println("Failed to close socket: " + e.getMessage());
+            }
+        }
+    }
+
+    public static void closeAllSockets() {
+        for (Map.Entry<String, Socket> entry : socketPool.entrySet()) {
+            closeSocket(entry.getValue());
+        }
+        socketPool.clear();
+
+        for (Map.Entry<String, SSLSocket> entry : sslSocketPool.entrySet()) {
+            closeSocket(entry.getValue());
+        }
+        sslSocketPool.clear();
+    }
+
     private String httpRequest() {
-        try (Socket socket = new Socket(this.host, this.port)) {
+        String key = this.host + ":" + this.port;
+        Socket socket = socketPool.get(key);
+
+        try {
+            if (socket == null || socket.isClosed()) {
+                socket = new Socket(host, port);
+                socket.setSoTimeout(5000);
+                socketPool.put(key, socket);
+            }
+
             String req = this.getRequestMessage();
 
             socket.getOutputStream().write(req.getBytes(StandardCharsets.UTF_8));
 
-            String response = new String(socket.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+            String firstResponse = new String(socket.getInputStream().readNBytes(1000), StandardCharsets.UTF_8);
+            Map<String, String> responseHeaders = processResponseHeaders(firstResponse);
+            int contentLength = Integer.parseInt(responseHeaders.get("content-length"));
+            int headersLength = firstResponse.split("\r\n\r\n")[0].length();
 
-            return this.processHttpResponse(response);
+            if (contentLength > 1000) {
+                String response = new String(socket.getInputStream().readNBytes(contentLength - (1000 - headersLength - 4)), StandardCharsets.UTF_8);
+                return this.processHttpBody(firstResponse + response);
+            }
+            else {
+                return this.processHttpBody(firstResponse);
+            }
         }
         catch (IOException e) {
             System.err.println("Could not connect to " + this.host + ":" + this.port + " | " + e.getMessage());
+
+            closeSocket(socket);
+            socketPool.remove(key);
         }
 
         return null;
     }
 
     private String httpsRequest() {
+        String key = this.host + ":" + this.port;
+        Socket socket = sslSocketPool.get(key);
+
         SSLSocketFactory sslSocketFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
 
-        try (Socket socket = sslSocketFactory.createSocket(this.host, this.port)) {
+        try {
+            if (socket == null || socket.isClosed()) {
+                socket = sslSocketFactory.createSocket(this.host, this.port);
+                socket.setSoTimeout(5000);
+                sslSocketPool.put(key, (SSLSocket) socket);
+            }
+
             String req = this.getRequestMessage();
 
             socket.getOutputStream().write(req.getBytes(StandardCharsets.UTF_8));
 
-            String response = new String(socket.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+            String firstResponse = new String(socket.getInputStream().readNBytes(1000), StandardCharsets.UTF_8);
+            Map<String, String> responseHeaders = processResponseHeaders(firstResponse);
+            int contentLength = Integer.parseInt(responseHeaders.get("content-length"));
+            int headersLength = firstResponse.split("\r\n\r\n")[0].length();
 
-            return this.processHttpResponse(response);
+            if (contentLength > 1000) {
+                String response = new String(socket.getInputStream().readNBytes(contentLength - (1000 - headersLength - 4)), StandardCharsets.UTF_8);
+                return this.processHttpBody(firstResponse + response);
+            }
+            else {
+                return this.processHttpBody(firstResponse);
+            }
         }
         catch (IOException e) {
             System.err.println("Could not connect to " + this.host + ":" + this.port + " | " + e.getMessage());
+
+            closeSocket(socket);
+            sslSocketPool.remove(key);
         }
 
         return null;

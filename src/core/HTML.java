@@ -28,7 +28,7 @@ public class HTML {
                 if (c == '&') {
                     entity.append("&");
                 }
-                else if (c == ';') {
+                else if (c == ';' && !entity.isEmpty()) {
                     System.out.println(HTML.resolveEntity(entity.toString()));
                     entity.setLength(0);
                 }

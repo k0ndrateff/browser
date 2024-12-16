@@ -18,4 +18,8 @@ public class PageController {
             System.err.println("Unable to load page: " + e.getMessage());
         }
     }
+
+    public static void shutdown() {
+        URL.closeAllSockets();
+    }
 }
