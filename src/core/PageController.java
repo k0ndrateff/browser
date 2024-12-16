@@ -7,10 +7,15 @@ public class PageController {
         try {
             String body = url.request();
 
-            HTML.printOnlyText(body);
+            if (url.isViewSource()) {
+                HTML.printSource(body);
+            }
+            else {
+                HTML.printOnlyText(body);
+            }
         }
         catch (IOException e) {
-            e.printStackTrace();
+            System.err.println("Unable to load page: " + e.getMessage());
         }
     }
 }

@@ -16,8 +16,14 @@ public class URL {
     private String path;
     private short port;
     private String dataContent;
+    private boolean isViewSource;
 
     public URL(String url) {
+        if (url.startsWith("view-source:")) {
+            isViewSource = true;
+            url = url.replace("view-source:", "");
+        }
+
         String separator = "://";
 
         // Specific case – “data” scheme separates by colon
@@ -53,6 +59,10 @@ public class URL {
                 parseDataUrl(url);
                 break;
         }
+    }
+
+    public boolean isViewSource() {
+        return this.isViewSource;
     }
 
     private void parseHttpUrl(String url) {

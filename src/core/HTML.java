@@ -1,6 +1,10 @@
 package core;
 
 public class HTML {
+    public static void printSource(String html) {
+        System.out.println(html);
+    }
+
     private static char resolveEntity(String entity) {
         return switch (entity) {
             case "&lt" -> '<';
