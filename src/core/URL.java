@@ -1,17 +1,19 @@
 package core;
 
 import javax.net.ssl.SSLSocketFactory;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 public class URL {
     private final String scheme;
     private String host;
-    private final String path;
+    private String path;
     private short port;
 
     public URL(String url) {
@@ -21,15 +23,22 @@ public class URL {
         url = parts[1];
 
         // Currently only HTTP and HTTPS are supported
-        assert Objects.equals(this.scheme, "http") || Objects.equals(this.scheme, "https");
+        String[] supportedSchemes = { "http", "https", "file" };
+        assert Arrays.asList(supportedSchemes).contains(this.scheme);
 
-        if (Objects.equals(this.scheme, "http")) {
-            this.port = 80;
+        switch (this.scheme) {
+            case "http":
+                this.port = 80;
+                parseHttpUrl(url);
+            case "https":
+                this.port = 443;
+                parseHttpUrl(url);
+            case "file":
+                parseFileUrl(url);
         }
-        else if (Objects.equals(this.scheme, "https")) {
-            this.port = 443;
-        }
+    }
 
+    private void parseHttpUrl(String url) {
         if (!url.endsWith("/")) {
             url += "/";
         }
@@ -52,6 +61,10 @@ public class URL {
         else {
             this.path = "/";
         }
+    }
+
+    private void parseFileUrl(String url) {
+        this.path = url;
     }
 
     private String getRequestMessage() {
@@ -146,10 +159,25 @@ public class URL {
         return null;
     }
 
+    private String fileRequest() {
+        File file = new File(this.path);
+        StringBuilder result = new StringBuilder();
+
+        try (FileInputStream fis = new FileInputStream(file)) {
+            result.append(new String(fis.readAllBytes(), StandardCharsets.UTF_8));
+        }
+        catch (IOException e) {
+            System.err.println("Could not open file " + this.path + " | " + e.getMessage());
+        }
+
+        return result.toString();
+    }
+
     public String request() throws IOException {
         return switch (this.scheme) {
             case "http" -> this.httpRequest();
             case "https" -> this.httpsRequest();
+            case "file" -> this.fileRequest();
             default -> null;
         };
     }
