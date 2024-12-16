@@ -1,7 +1,5 @@
 package core;
 
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.IOException;
 import java.net.Socket;
@@ -11,17 +9,18 @@ import java.util.Map;
 import java.util.Objects;
 
 public class URL {
-    private String scheme;
+    private final String scheme;
     private String host;
-    private String path;
+    private final String path;
     private short port;
 
     public URL(String url) {
-        String[] parts = url.split("://");
+        String[] parts = url.split("://", 2);
 
         this.scheme = parts[0];
         url = parts[1];
 
+        // Currently only HTTP and HTTPS are supported
         assert Objects.equals(this.scheme, "http") || Objects.equals(this.scheme, "https");
 
         if (Objects.equals(this.scheme, "http")) {
@@ -35,11 +34,11 @@ public class URL {
             url += "/";
         }
 
-        String[] urlParts = url.split("/");
+        String[] urlParts = url.split("/", 2);
 
         this.host = urlParts[0];
 
-        String[] hostParts = host.split(":");
+        String[] hostParts = host.split(":", 2);
 
         if (hostParts.length > 1) {
             this.host = hostParts[0];
@@ -55,22 +54,24 @@ public class URL {
         }
     }
 
-    public String request() throws IOException {
-        Socket socket = new Socket(this.host, this.port);
+    private String getRequestMessage() {
+        Map<String, String> defaultHeaders = new HashMap<>();
+        defaultHeaders.put("Host", this.host);
+        defaultHeaders.put("Connection", "close");
+        defaultHeaders.put("User-Agent", "k0ndrateff/browser");
 
-        if (Objects.equals(this.scheme, "https")) {
-            SSLSocketFactory sslSocketFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
-            socket = sslSocketFactory.createSocket(this.host, this.port);
+        StringBuilder req = new StringBuilder("GET " + this.path + " HTTP/1.1\r\n");
+
+        for (Map.Entry<String, String> header : defaultHeaders.entrySet()) {
+            req.append(header.getKey()).append(": ").append(header.getValue()).append("\r\n");
         }
 
-        String req = "GET " + this.path + " HTTP/1.0\r\n";
-        req += "Host: " + this.host + "\r\n";
-        req += "\r\n";
+        req.append("\r\n");
 
-        socket.getOutputStream().write(req.getBytes(StandardCharsets.UTF_8));
+        return req.toString();
+    }
 
-        String response = new String(socket.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
-
+    private String processHttpResponse(String response) {
         String[] lines = response.split("\r\n");
         String[] statusLine = lines[0].split(" ");
         String version = statusLine[0];
@@ -79,13 +80,13 @@ public class URL {
 
         Map<String, String> responseHeaders = new HashMap<String, String>();
         boolean isReadingContent = false;
-        String content = "";
+        StringBuilder content = new StringBuilder();
 
         for (String line : lines) {
             if (line.startsWith("HTTP")) continue;
 
             if (isReadingContent) {
-                content += line;
+                content.append(line);
 
                 continue;
             }
@@ -96,7 +97,7 @@ public class URL {
                 continue;
             }
 
-            String[] headerSplit = line.split(":");
+            String[] headerSplit = line.split(":", 2);
             String header = headerSplit[0];
             String value = headerSplit[1];
 
@@ -106,6 +107,50 @@ public class URL {
         assert !responseHeaders.containsKey("transfer-encoding");
         assert !responseHeaders.containsKey("content-encoding");
 
-        return content;
+        return content.toString();
+    }
+
+    private String httpRequest() {
+        try (Socket socket = new Socket(this.host, this.port)) {
+            String req = this.getRequestMessage();
+
+            socket.getOutputStream().write(req.getBytes(StandardCharsets.UTF_8));
+
+            String response = new String(socket.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+
+            return this.processHttpResponse(response);
+        }
+        catch (IOException e) {
+            System.err.println("Could not connect to " + this.host + ":" + this.port + " | " + e.getMessage());
+        }
+
+        return null;
+    }
+
+    private String httpsRequest() {
+        SSLSocketFactory sslSocketFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+
+        try (Socket socket = sslSocketFactory.createSocket(this.host, this.port)) {
+            String req = this.getRequestMessage();
+
+            socket.getOutputStream().write(req.getBytes(StandardCharsets.UTF_8));
+
+            String response = new String(socket.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+
+            return this.processHttpResponse(response);
+        }
+        catch (IOException e) {
+            System.err.println("Could not connect to " + this.host + ":" + this.port + " | " + e.getMessage());
+        }
+
+        return null;
+    }
+
+    public String request() throws IOException {
+        return switch (this.scheme) {
+            case "http" -> this.httpRequest();
+            case "https" -> this.httpsRequest();
+            default -> null;
+        };
     }
 }
