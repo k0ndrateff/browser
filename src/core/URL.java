@@ -1,5 +1,8 @@
 package core;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
 import java.io.IOException;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
@@ -11,6 +14,7 @@ public class URL {
     private String scheme;
     private String host;
     private String path;
+    private short port;
 
     public URL(String url) {
         String[] parts = url.split("://");
@@ -18,7 +22,14 @@ public class URL {
         this.scheme = parts[0];
         url = parts[1];
 
-        assert Objects.equals(this.scheme, "http");
+        assert Objects.equals(this.scheme, "http") || Objects.equals(this.scheme, "https");
+
+        if (Objects.equals(this.scheme, "http")) {
+            this.port = 80;
+        }
+        else if (Objects.equals(this.scheme, "https")) {
+            this.port = 443;
+        }
 
         if (!url.endsWith("/")) {
             url += "/";
@@ -27,6 +38,13 @@ public class URL {
         String[] urlParts = url.split("/");
 
         this.host = urlParts[0];
+
+        String[] hostParts = host.split(":");
+
+        if (hostParts.length > 1) {
+            this.host = hostParts[0];
+            this.port = Short.parseShort(hostParts[1]);
+        }
 
         if (urlParts.length > 1) {
             url = urlParts[1];
@@ -38,7 +56,12 @@ public class URL {
     }
 
     public String request() throws IOException {
-        Socket socket = new Socket(this.host, 80);
+        Socket socket = new Socket(this.host, this.port);
+
+        if (Objects.equals(this.scheme, "https")) {
+            SSLSocketFactory sslSocketFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+            socket = sslSocketFactory.createSocket(this.host, this.port);
+        }
 
         String req = "GET " + this.path + " HTTP/1.0\r\n";
         req += "Host: " + this.host + "\r\n";
