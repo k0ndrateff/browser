@@ -15,26 +15,43 @@ public class URL {
     private String host;
     private String path;
     private short port;
+    private String dataContent;
 
     public URL(String url) {
-        String[] parts = url.split("://", 2);
+        String separator = "://";
+
+        // Specific case – “data” scheme separates by colon
+        if (url.startsWith("data")) {
+            separator = ":";
+        }
+
+        String[] parts = url.split(separator, 2);
 
         this.scheme = parts[0];
         url = parts[1];
 
         // Currently only HTTP and HTTPS are supported
-        String[] supportedSchemes = { "http", "https", "file" };
+        String[] supportedSchemes = { "http", "https", "file", "data" };
         assert Arrays.asList(supportedSchemes).contains(this.scheme);
 
         switch (this.scheme) {
             case "http":
                 this.port = 80;
                 parseHttpUrl(url);
+                break;
+
             case "https":
                 this.port = 443;
                 parseHttpUrl(url);
+                break;
+
             case "file":
                 parseFileUrl(url);
+                break;
+
+            case "data":
+                parseDataUrl(url);
+                break;
         }
     }
 
@@ -67,6 +84,12 @@ public class URL {
         this.path = url;
     }
 
+    private void parseDataUrl(String url) {
+        String[] parts = url.split(",", 2);
+
+        this.dataContent = parts[1];
+    }
+
     private String getRequestMessage() {
         Map<String, String> defaultHeaders = new HashMap<>();
         defaultHeaders.put("Host", this.host);
@@ -91,7 +114,7 @@ public class URL {
         String status = statusLine[1];
         String explanation = statusLine[2];
 
-        Map<String, String> responseHeaders = new HashMap<String, String>();
+        Map<String, String> responseHeaders = new HashMap<>();
         boolean isReadingContent = false;
         StringBuilder content = new StringBuilder();
 
@@ -173,11 +196,16 @@ public class URL {
         return result.toString();
     }
 
+    private String dataRequest() {
+        return this.dataContent;
+    }
+
     public String request() throws IOException {
         return switch (this.scheme) {
             case "http" -> this.httpRequest();
             case "https" -> this.httpsRequest();
             case "file" -> this.fileRequest();
+            case "data" -> this.dataRequest();
             default -> null;
         };
     }
