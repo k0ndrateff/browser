@@ -1,6 +1,7 @@
 package core.request;
 
 import core.Browser;
+import core.CompressionController;
 
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
@@ -90,7 +91,7 @@ public class HTTPRequest {
             responseHeaders.put(header.toLowerCase(), value.strip());
         }
 
-        if (responseHeaders.containsKey("transfer-encoding") || responseHeaders.containsKey("content-encoding")) {
+        if (responseHeaders.containsKey("transfer-encoding")) {
             throw new RuntimeException("HTTP header contains unsupported transfer encoding.");
         }
 
@@ -106,6 +107,7 @@ public class HTTPRequest {
         }
 
         defaultHeaders.put("User-Agent", "k0ndrateff/browser");
+        defaultHeaders.put("Accept-Encoding", "gzip");
 
         StringBuilder req = new StringBuilder("GET " + this.url.getPath() + " HTTP/1.1\r\n");
 
@@ -175,13 +177,25 @@ public class HTTPRequest {
                 throw new IOException("Invalid or missing Content-Length header");
             }
 
-            char[] bodyChars = new char[contentLength];
-            int bytesRead = reader.read(bodyChars, 0, contentLength);
-            if (bytesRead != contentLength) {
-                throw new IOException("Failed to read the entire body");
-            }
+            String body = "";
 
-            String body = new String(bodyChars);
+            if (responseHeaders.containsKey("content-encoding")) {
+                byte[] buffer = new byte[contentLength];
+                int bytesRead =  inputStream.readNBytes(buffer, 0, contentLength);
+                if (bytesRead != contentLength) {
+                    throw new IOException("Failed to read the entire body");
+                }
+
+                body = CompressionController.decode(buffer, responseHeaders.get("content-encoding"));
+            }
+            else {
+                char[] bodyChars = new char[contentLength];
+                int bytesRead = reader.read(bodyChars, 0, contentLength);
+                if (bytesRead != contentLength) {
+                    throw new IOException("Failed to read the entire body");
+                }
+                body = new String(bodyChars);
+            }
 
             if (shouldBeCached) {
                 String[] cacheControlParts = responseHeaders.get("cache-control").split("=");
@@ -267,13 +281,25 @@ public class HTTPRequest {
                 throw new IOException("Invalid or missing Content-Length header");
             }
 
-            char[] bodyChars = new char[contentLength];
-            int bytesRead = reader.read(bodyChars, 0, contentLength);
-            if (bytesRead != contentLength) {
-                throw new IOException("Failed to read the entire body");
-            }
+            String body = "";
 
-            String body = new String(bodyChars);
+            if (responseHeaders.containsKey("content-encoding")) {
+                byte[] buffer = new byte[contentLength];
+                int bytesRead =  inputStream.readNBytes(buffer, 0, contentLength);
+                if (bytesRead != contentLength) {
+                    throw new IOException("Failed to read the entire body");
+                }
+
+                body = CompressionController.decode(buffer, responseHeaders.get("content-encoding"));
+            }
+            else {
+                char[] bodyChars = new char[contentLength];
+                int bytesRead = reader.read(bodyChars, 0, contentLength);
+                if (bytesRead != contentLength) {
+                    throw new IOException("Failed to read the entire body");
+                }
+                body = new String(bodyChars);
+            }
 
             if (shouldBeCached) {
                 String[] cacheControlParts = responseHeaders.get("cache-control").split("=");
