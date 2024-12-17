@@ -69,6 +69,10 @@ public class URL {
         return this.path;
     }
 
+    public void setPath(String path) {
+        this.path = path;
+    }
+
     public short getPort() {
         return this.port;
     }
@@ -136,6 +140,14 @@ public class URL {
             case "https" -> new HTTPRequest(this).httpsRequest();
             case "file" -> this.fileRequest();
             case "data" -> this.dataRequest();
+            default -> null;
+        };
+    }
+
+    public String request(short redirectTryCount) throws IOException {
+        return switch (this.scheme) {
+            case "http" -> new HTTPRequest(this, redirectTryCount).httpRequest();
+            case "https" -> new HTTPRequest(this, redirectTryCount).httpsRequest();
             default -> null;
         };
     }

@@ -12,14 +12,26 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class HTTPRequest {
     private final URL url;
+    private final short redirectTryCount;
 
-    private static final int FIRST_N_BYTES = 500;
+    private static final int FIRST_N_BYTES = 300;
+    private static final short MAX_REDIRECT_TRIES = 20;
 
     private static final Map<String, Socket> socketPool = new ConcurrentHashMap<>();
     private static final Map<String, SSLSocket> sslSocketPool = new ConcurrentHashMap<>();
 
     public HTTPRequest(URL url) {
         this.url = url;
+        this.redirectTryCount = 0;
+    }
+
+    public HTTPRequest(URL url, short redirectTryCount) {
+        if (redirectTryCount >= MAX_REDIRECT_TRIES) {
+            throw new RuntimeException("Maximum number of redirects exceeded.");
+        }
+
+        this.url = url;
+        this.redirectTryCount = redirectTryCount;
     }
 
     private static void closeSocket(Socket socket) {
@@ -49,10 +61,13 @@ public class HTTPRequest {
 
         String[] statusLine = lines[0].split(" ");
         String version = statusLine[0];
-        String status = statusLine[1];
         String explanation = statusLine[2];
 
         return statusLine;
+    }
+
+    private String getResponseStatus(String response) {
+        return this.processHttpStatusLine(response)[1];
     }
 
     private Map<String, String> processResponseHeaders(String response) {
@@ -135,7 +150,22 @@ public class HTTPRequest {
             socket.getOutputStream().write(req.getBytes(StandardCharsets.UTF_8));
 
             String firstResponse = new String(socket.getInputStream().readNBytes(FIRST_N_BYTES), StandardCharsets.UTF_8);
+            String status = this.getResponseStatus(firstResponse);
             Map<String, String> responseHeaders = processResponseHeaders(firstResponse);
+
+            // REDIRECT
+            if (status.startsWith("3")) {
+                String newLocation = responseHeaders.get("location");
+
+                if (newLocation.startsWith("/")) {
+                    this.url.setPath(newLocation);
+                    return this.url.request((short) (this.redirectTryCount + 1));
+                }
+                else {
+                    return new URL(newLocation).request((short) (this.redirectTryCount + 1));
+                }
+            }
+
             int contentLength = Integer.parseInt(responseHeaders.get("content-length"));
             int headersLength = firstResponse.split("\r\n\r\n")[0].length();
 
@@ -175,7 +205,22 @@ public class HTTPRequest {
             socket.getOutputStream().write(req.getBytes(StandardCharsets.UTF_8));
 
             String firstResponse = new String(socket.getInputStream().readNBytes(FIRST_N_BYTES), StandardCharsets.UTF_8);
+            String status = this.getResponseStatus(firstResponse);
             Map<String, String> responseHeaders = processResponseHeaders(firstResponse);
+
+            // REDIRECT
+            if (status.startsWith("3")) {
+                String newLocation = responseHeaders.get("location");
+
+                if (newLocation.startsWith("/")) {
+                    this.url.setPath(newLocation);
+                    return this.url.request((short) (this.redirectTryCount + 1));
+                }
+                else {
+                    return new URL(newLocation).request((short) (this.redirectTryCount + 1));
+                }
+            }
+
             int contentLength = Integer.parseInt(responseHeaders.get("content-length"));
             int headersLength = firstResponse.split("\r\n\r\n")[0].length();
 
