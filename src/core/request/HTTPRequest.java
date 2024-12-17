@@ -90,10 +90,6 @@ public class HTTPRequest {
             responseHeaders.put(header.toLowerCase(), value.strip());
         }
 
-        if (responseHeaders.containsKey("transfer-encoding")) {
-            throw new RuntimeException("HTTP header contains unsupported transfer encoding.");
-        }
-
         return responseHeaders;
     }
 
@@ -131,6 +127,7 @@ public class HTTPRequest {
         socket.getOutputStream().write(req.getBytes(StandardCharsets.UTF_8));
 
         InputStream inputStream = socket.getInputStream();
+
         BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
         StringBuilder headersBuilder = new StringBuilder();
         String line;
@@ -161,14 +158,28 @@ public class HTTPRequest {
             shouldBeCached = true;
         }
 
-        int contentLength = Integer.parseInt(responseHeaders.get("content-length"));
-        if (contentLength < 0) {
+        int contentLength = responseHeaders.containsKey("content-length") ? Integer.parseInt(responseHeaders.get("content-length")) : -1;
+        if (contentLength < 0 && !responseHeaders.containsKey("transfer-encoding")) {
             throw new IOException("Invalid or missing Content-Length header");
         }
 
         String body = "";
 
-        if (responseHeaders.containsKey("content-encoding")) {
+        if (responseHeaders.containsKey("transfer-encoding")) {
+            if (!responseHeaders.get("transfer-encoding").contains("chunked")) {
+                throw new IOException("Unsupported transfer encoding: " + responseHeaders.get("transfer-encoding"));
+            }
+
+            byte[] chunkedData = CompressionController.readChunkedResponse(inputStream);
+
+            if (responseHeaders.containsKey("content-encoding")) {
+                body = CompressionController.decode(chunkedData, responseHeaders.get("content-encoding"));
+            }
+            else {
+                body = new String(chunkedData, StandardCharsets.UTF_8);
+            }
+        }
+        else if (responseHeaders.containsKey("content-encoding")) {
             byte[] buffer = new byte[contentLength];
             int bytesRead =  inputStream.readNBytes(buffer, 0, contentLength);
             if (bytesRead != contentLength) {
