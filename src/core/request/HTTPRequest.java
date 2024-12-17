@@ -14,7 +14,7 @@ public class HTTPRequest {
     private final URL url;
     private final short redirectTryCount;
 
-    private static final int FIRST_N_BYTES = 300;
+    private static final int FIRST_N_BYTES = 500;
     private static final short MAX_REDIRECT_TRIES = 20;
 
     private static final Map<String, Socket> socketPool = new ConcurrentHashMap<>();
