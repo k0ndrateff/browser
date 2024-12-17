@@ -29,13 +29,15 @@ public class CachingController {
 
                 String line;
                 while ((line = br.readLine()) != null) {
-                    cacheMap.put(line.split(" ")[0], line.split(" ")[1]);
+                    String[] parts = line.split(" ");
 
-                    if (line.split(" ").length > 2) {
-                        ttlMap.put(line.split(" ")[0], Instant.parse(line.split(" ")[2]));
+                    cacheMap.put(parts[0], parts[1]);
+
+                    if (parts.length > 2) {
+                        ttlMap.put(parts[0], Instant.parse(parts[2]));
                     }
                     else {
-                        ttlMap.put(line.split(" ")[0], Instant.now());
+                        ttlMap.put(parts[0], Instant.now());
                     }
                 }
             }
@@ -45,17 +47,27 @@ public class CachingController {
         }
     }
 
+    private String getMapKey(String host, short port, String path) {
+        return host + ":" + port + path;
+    }
+
+    private String getFileName(String name) {
+        return this.containerPath + "/" + name;
+    }
+
     public boolean contains(String host, short port, String path) {
-        if (ttlMap.containsKey(host + ":" + port + path)) {
-            Instant expires = ttlMap.get(host + ":" + port + path);
+        String key = this.getMapKey(host, port, path);
+
+        if (ttlMap.containsKey(key)) {
+            Instant expires = ttlMap.get(key);
             Instant now = Instant.now();
 
             if (now.isBefore(expires)) {
-                return cacheMap.containsKey(host + ":" + port + path);
+                return cacheMap.containsKey(key);
             }
             else {
-                cacheMap.remove(host + ":" + port + path);
-                ttlMap.remove(host + ":" + port + path);
+                cacheMap.remove(key);
+                ttlMap.remove(key);
 
                 return false;
             }
@@ -65,12 +77,13 @@ public class CachingController {
     }
 
     public String get(String host, short port, String path) {
-        String fileName = cacheMap.get(host + ":" + port + path);
+        String key = this.getMapKey(host, port, path);
+        String fileName = this.getFileName(cacheMap.get(key));
 
-        File file = new File(this.containerPath + "/" + fileName);
+        File file = new File(fileName);
         if (file.exists()) {
             try {
-                BufferedReader br = new BufferedReader(new FileReader(this.containerPath + "/" + fileName));
+                BufferedReader br = new BufferedReader(new FileReader(fileName));
 
                 String line;
                 StringBuilder sb = new StringBuilder();
@@ -91,16 +104,18 @@ public class CachingController {
     public void put(String host, short port, String path, String content, int ttl) {
         String fileName = UUID.randomUUID().toString();
 
-        cacheMap.put(host + ":" + port + path, fileName);
+        String key = this.getMapKey(host, port, path);
+
+        cacheMap.put(key, fileName);
 
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(new Date());
         calendar.add(Calendar.SECOND, ttl);
 
-        ttlMap.put(host + ":" + port + path, calendar.toInstant());
+        ttlMap.put(key, calendar.toInstant());
 
         try {
-            File cacheFile = new File(this.containerPath + "/" + fileName);
+            File cacheFile = new File(this.getFileName(fileName));
             boolean cacheFileDidntExist = cacheFile.createNewFile();
 
             if (cacheFileDidntExist) {
@@ -117,6 +132,7 @@ public class CachingController {
 
     private void updateCacheMapFile() throws IOException {
         File cacheMapFile = new File(this.containerPath + "/.cachemap");
+
         if (cacheMapFile.exists()) {
             BufferedWriter bw = new BufferedWriter(new FileWriter(cacheMapFile));
 

@@ -13,7 +13,7 @@ public class Browser {
     }
 
     public static void main(String[] args) {
-        cachingController.init();
+        init();
 
         URL url = new URL(Browser.DEFAULT_URL);
 
@@ -28,6 +28,14 @@ public class Browser {
 
         PageController.load(url);
 
+        shutdown();
+    }
+
+    private static void init() {
+        cachingController.init();
+    }
+
+    private static void shutdown() {
         PageController.shutdown();
         cachingController.shutdown();
     }

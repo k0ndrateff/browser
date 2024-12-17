@@ -1,6 +1,7 @@
 package core.request;
 
 import core.Browser;
+import core.CachingController;
 import core.CompressionController;
 
 import javax.net.ssl.SSLSocket;
@@ -24,6 +25,8 @@ public class HTTPRequest {
 
     private static final Map<String, Socket> socketPool = new ConcurrentHashMap<>();
     private static final Map<String, SSLSocket> sslSocketPool = new ConcurrentHashMap<>();
+
+    private static final CachingController cachingController = Browser.getCachingController();
 
     public HTTPRequest(URL url) {
         this.url = url;
@@ -64,11 +67,7 @@ public class HTTPRequest {
     private String[] processHttpStatusLine(String response) {
         String[] lines = response.split("\r\n");
 
-        String[] statusLine = lines[0].split(" ");
-        String version = statusLine[0];
-        String explanation = statusLine[2];
-
-        return statusLine;
+        return lines[0].split(" ");
     }
 
     private String getResponseStatus(String response) {
@@ -120,13 +119,90 @@ public class HTTPRequest {
         return req.toString();
     }
 
-    public String httpRequest() {
-        if (Browser.getCachingController().contains(this.url.getHost(), this.url.getPort(), this.url.getPath())) {
-            return Browser.getCachingController().get(this.url.getHost(), this.url.getPort(), this.url.getPath());
+    private String request(Socket socket) throws IOException {
+        if (cachingController.contains(this.url.getHost(), this.url.getPort(), this.url.getPath())) {
+            return cachingController.get(this.url.getHost(), this.url.getPort(), this.url.getPath());
         }
 
         boolean shouldBeCached = false;
 
+        String req = this.getRequestMessage();
+
+        socket.getOutputStream().write(req.getBytes(StandardCharsets.UTF_8));
+
+        InputStream inputStream = socket.getInputStream();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
+        StringBuilder headersBuilder = new StringBuilder();
+        String line;
+
+        while ((line = reader.readLine()) != null && !line.isEmpty()) {
+            headersBuilder.append(line).append("\r\n");
+        }
+
+        String headers = headersBuilder.toString();
+        String status = this.getResponseStatus(headers);
+        Map<String, String> responseHeaders = processResponseHeaders(headers);
+
+        // REDIRECT
+        if (status.startsWith("3")) {
+            String newLocation = responseHeaders.get("location");
+
+            if (newLocation.startsWith("/")) {
+                this.url.setPath(newLocation);
+                return this.url.request((short) (this.redirectTryCount + 1));
+            }
+            else {
+                return new URL(newLocation).request((short) (this.redirectTryCount + 1));
+            }
+        }
+
+        String cacheControl = responseHeaders.get("cache-control");
+        if (cacheControl == null || cacheControl.contains("max-age")) {
+            shouldBeCached = true;
+        }
+
+        int contentLength = Integer.parseInt(responseHeaders.get("content-length"));
+        if (contentLength < 0) {
+            throw new IOException("Invalid or missing Content-Length header");
+        }
+
+        String body = "";
+
+        if (responseHeaders.containsKey("content-encoding")) {
+            byte[] buffer = new byte[contentLength];
+            int bytesRead =  inputStream.readNBytes(buffer, 0, contentLength);
+            if (bytesRead != contentLength) {
+                throw new IOException("Failed to read the entire body");
+            }
+
+            body = CompressionController.decode(buffer, responseHeaders.get("content-encoding"));
+        }
+        else {
+            char[] bodyChars = new char[contentLength];
+            int bytesRead = reader.read(bodyChars, 0, contentLength);
+            if (bytesRead != contentLength) {
+                throw new IOException("Failed to read the entire body");
+            }
+            body = new String(bodyChars);
+        }
+
+        if (shouldBeCached) {
+            String[] cacheControlParts = responseHeaders.get("cache-control").split("=");
+
+            if (cacheControlParts.length == 2) {
+                int maxAge = Integer.parseInt(cacheControlParts[1]);
+
+                Browser.getCachingController().put(this.url.getHost(), this.url.getPort(), this.url.getPath(), body, maxAge);
+            }
+            else {
+                Browser.getCachingController().put(this.url.getHost(), this.url.getPort(), this.url.getPath(), body, Browser.getCachingController().DEFAULT_TTL);
+            }
+        }
+
+        return body;
+    }
+
+    public String httpRequest() {
         String key = this.url.getHost() + ":" + this.url.getPort();
         Socket socket = socketPool.get(key);
 
@@ -137,80 +213,7 @@ public class HTTPRequest {
                 socketPool.put(key, socket);
             }
 
-            String req = this.getRequestMessage();
-
-            socket.getOutputStream().write(req.getBytes(StandardCharsets.UTF_8));
-
-            InputStream inputStream = socket.getInputStream();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
-            StringBuilder headersBuilder = new StringBuilder();
-            String line;
-
-            while ((line = reader.readLine()) != null && !line.isEmpty()) {
-                headersBuilder.append(line).append("\r\n");
-            }
-
-            String headers = headersBuilder.toString();
-            String status = this.getResponseStatus(headers);
-            Map<String, String> responseHeaders = processResponseHeaders(headers);
-
-            // REDIRECT
-            if (status.startsWith("3")) {
-                String newLocation = responseHeaders.get("location");
-
-                if (newLocation.startsWith("/")) {
-                    this.url.setPath(newLocation);
-                    return this.url.request((short) (this.redirectTryCount + 1));
-                }
-                else {
-                    return new URL(newLocation).request((short) (this.redirectTryCount + 1));
-                }
-            }
-
-            String cacheControl = responseHeaders.get("cache-control");
-            if (cacheControl == null || cacheControl.contains("max-age")) {
-                shouldBeCached = true;
-            }
-
-            int contentLength = Integer.parseInt(responseHeaders.get("content-length"));
-            if (contentLength < 0) {
-                throw new IOException("Invalid or missing Content-Length header");
-            }
-
-            String body = "";
-
-            if (responseHeaders.containsKey("content-encoding")) {
-                byte[] buffer = new byte[contentLength];
-                int bytesRead =  inputStream.readNBytes(buffer, 0, contentLength);
-                if (bytesRead != contentLength) {
-                    throw new IOException("Failed to read the entire body");
-                }
-
-                body = CompressionController.decode(buffer, responseHeaders.get("content-encoding"));
-            }
-            else {
-                char[] bodyChars = new char[contentLength];
-                int bytesRead = reader.read(bodyChars, 0, contentLength);
-                if (bytesRead != contentLength) {
-                    throw new IOException("Failed to read the entire body");
-                }
-                body = new String(bodyChars);
-            }
-
-            if (shouldBeCached) {
-                String[] cacheControlParts = responseHeaders.get("cache-control").split("=");
-
-                if (cacheControlParts.length == 2) {
-                    int maxAge = Integer.parseInt(cacheControlParts[1]);
-
-                    Browser.getCachingController().put(this.url.getHost(), this.url.getPort(), this.url.getPath(), body, maxAge);
-                }
-                else {
-                    Browser.getCachingController().put(this.url.getHost(), this.url.getPort(), this.url.getPath(), body, Browser.getCachingController().DEFAULT_TTL);
-                }
-            }
-
-            return body;
+            return this.request(socket);
         }
         catch (IOException e) {
             System.err.println("Could not connect to " + this.url.getHost() + ":" + this.url.getPort() + " | " + e.getMessage());
@@ -223,12 +226,6 @@ public class HTTPRequest {
     }
 
     public String httpsRequest() {
-        if (Browser.getCachingController().contains(this.url.getHost(), this.url.getPort(), this.url.getPath())) {
-            return Browser.getCachingController().get(this.url.getHost(), this.url.getPort(), this.url.getPath());
-        }
-
-        boolean shouldBeCached = false;
-
         String key = this.url.getHost() + ":" + this.url.getPort();
         Socket socket = sslSocketPool.get(key);
 
@@ -241,82 +238,8 @@ public class HTTPRequest {
                 sslSocketPool.put(key, (SSLSocket) socket);
             }
 
-            String req = this.getRequestMessage();
-
-            socket.getOutputStream().write(req.getBytes(StandardCharsets.UTF_8));
-
-            InputStream inputStream = socket.getInputStream();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
-            StringBuilder headersBuilder = new StringBuilder();
-            String line;
-
-            while ((line = reader.readLine()) != null && !line.isEmpty()) {
-                headersBuilder.append(line).append("\r\n");
-            }
-
-            String headers = headersBuilder.toString();
-            String status = this.getResponseStatus(headers);
-            Map<String, String> responseHeaders = processResponseHeaders(headers);
-
-            // REDIRECT
-            if (status.startsWith("3")) {
-                String newLocation = responseHeaders.get("location");
-
-                if (newLocation.startsWith("/")) {
-                    this.url.setPath(newLocation);
-                    return this.url.request((short) (this.redirectTryCount + 1));
-                }
-                else {
-                    return new URL(newLocation).request((short) (this.redirectTryCount + 1));
-                }
-            }
-
-            String cacheControl = responseHeaders.get("cache-control");
-            if (cacheControl == null || cacheControl.contains("max-age")) {
-                shouldBeCached = true;
-            }
-
-            int contentLength = Integer.parseInt(responseHeaders.get("content-length"));
-            if (contentLength < 0) {
-                throw new IOException("Invalid or missing Content-Length header");
-            }
-
-            String body = "";
-
-            if (responseHeaders.containsKey("content-encoding")) {
-                byte[] buffer = new byte[contentLength];
-                int bytesRead =  inputStream.readNBytes(buffer, 0, contentLength);
-                if (bytesRead != contentLength) {
-                    throw new IOException("Failed to read the entire body");
-                }
-
-                body = CompressionController.decode(buffer, responseHeaders.get("content-encoding"));
-            }
-            else {
-                char[] bodyChars = new char[contentLength];
-                int bytesRead = reader.read(bodyChars, 0, contentLength);
-                if (bytesRead != contentLength) {
-                    throw new IOException("Failed to read the entire body");
-                }
-                body = new String(bodyChars);
-            }
-
-            if (shouldBeCached) {
-                String[] cacheControlParts = responseHeaders.get("cache-control").split("=");
-
-                if (cacheControlParts.length == 2) {
-                    int maxAge = Integer.parseInt(cacheControlParts[1]);
-
-                    Browser.getCachingController().put(this.url.getHost(), this.url.getPort(), this.url.getPath(), body, maxAge);
-                }
-                else {
-                    Browser.getCachingController().put(this.url.getHost(), this.url.getPort(), this.url.getPath(), body, Browser.getCachingController().DEFAULT_TTL);
-                }
-            }
-
-            return body;
-        }
-        catch (IOException e) {
+            return this.request(socket);
+        } catch (IOException e) {
             System.err.println("Could not connect to " + this.url.getHost() + ":" + this.url.getPort() + " | " + e.getMessage());
 
             closeSocket(socket);
