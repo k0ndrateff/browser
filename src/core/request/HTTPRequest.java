@@ -123,6 +123,8 @@ public class HTTPRequest {
             return Browser.getCachingController().get(this.url.getHost(), this.url.getPort(), this.url.getPath());
         }
 
+        boolean shouldBeCached = false;
+
         String key = this.url.getHost() + ":" + this.url.getPort();
         Socket socket = socketPool.get(key);
 
@@ -163,6 +165,11 @@ public class HTTPRequest {
                 }
             }
 
+            String cacheControl = responseHeaders.get("cache-control");
+            if (cacheControl == null || cacheControl.contains("max-age")) {
+                shouldBeCached = true;
+            }
+
             int contentLength = Integer.parseInt(responseHeaders.get("content-length"));
             if (contentLength < 0) {
                 throw new IOException("Invalid or missing Content-Length header");
@@ -176,7 +183,19 @@ public class HTTPRequest {
 
             String body = new String(bodyChars);
 
-            Browser.getCachingController().put(this.url.getHost(), this.url.getPort(), this.url.getPath(), body);
+            if (shouldBeCached) {
+                String[] cacheControlParts = responseHeaders.get("cache-control").split("=");
+
+                if (cacheControlParts.length == 2) {
+                    int maxAge = Integer.parseInt(cacheControlParts[1]);
+
+                    Browser.getCachingController().put(this.url.getHost(), this.url.getPort(), this.url.getPath(), body, maxAge);
+                }
+                else {
+                    Browser.getCachingController().put(this.url.getHost(), this.url.getPort(), this.url.getPath(), body, Browser.getCachingController().DEFAULT_TTL);
+                }
+            }
+
             return body;
         }
         catch (IOException e) {
@@ -193,6 +212,8 @@ public class HTTPRequest {
         if (Browser.getCachingController().contains(this.url.getHost(), this.url.getPort(), this.url.getPath())) {
             return Browser.getCachingController().get(this.url.getHost(), this.url.getPort(), this.url.getPath());
         }
+
+        boolean shouldBeCached = false;
 
         String key = this.url.getHost() + ":" + this.url.getPort();
         Socket socket = sslSocketPool.get(key);
@@ -236,6 +257,11 @@ public class HTTPRequest {
                 }
             }
 
+            String cacheControl = responseHeaders.get("cache-control");
+            if (cacheControl == null || cacheControl.contains("max-age")) {
+                shouldBeCached = true;
+            }
+
             int contentLength = Integer.parseInt(responseHeaders.get("content-length"));
             if (contentLength < 0) {
                 throw new IOException("Invalid or missing Content-Length header");
@@ -249,7 +275,19 @@ public class HTTPRequest {
 
             String body = new String(bodyChars);
 
-            Browser.getCachingController().put(this.url.getHost(), this.url.getPort(), this.url.getPath(), body);
+            if (shouldBeCached) {
+                String[] cacheControlParts = responseHeaders.get("cache-control").split("=");
+
+                if (cacheControlParts.length == 2) {
+                    int maxAge = Integer.parseInt(cacheControlParts[1]);
+
+                    Browser.getCachingController().put(this.url.getHost(), this.url.getPort(), this.url.getPath(), body, maxAge);
+                }
+                else {
+                    Browser.getCachingController().put(this.url.getHost(), this.url.getPort(), this.url.getPath(), body, Browser.getCachingController().DEFAULT_TTL);
+                }
+            }
+
             return body;
         }
         catch (IOException e) {
