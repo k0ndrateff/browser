@@ -1,5 +1,8 @@
 package core;
 
+import core.request.HTTPRequest;
+import core.request.URL;
+
 import java.io.IOException;
 
 public class PageController {
@@ -20,6 +23,6 @@ public class PageController {
     }
 
     public static void shutdown() {
-        URL.closeAllSockets();
+        HTTPRequest.closeAllSockets();
     }
 }

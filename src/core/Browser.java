@@ -1,5 +1,7 @@
 package core;
 
+import core.request.URL;
+
 public class Browser {
     private static final String DEFAULT_URL = "file://test.html";
 
