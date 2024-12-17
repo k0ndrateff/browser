@@ -1,5 +1,7 @@
 package core.request;
 
+import core.Browser;
+
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.BufferedReader;
@@ -117,6 +119,10 @@ public class HTTPRequest {
     }
 
     public String httpRequest() {
+        if (Browser.getCachingController().contains(this.url.getHost(), this.url.getPort(), this.url.getPath())) {
+            return Browser.getCachingController().get(this.url.getHost(), this.url.getPort(), this.url.getPath());
+        }
+
         String key = this.url.getHost() + ":" + this.url.getPort();
         Socket socket = socketPool.get(key);
 
@@ -168,7 +174,10 @@ public class HTTPRequest {
                 throw new IOException("Failed to read the entire body");
             }
 
-            return new String(bodyChars);
+            String body = new String(bodyChars);
+
+            Browser.getCachingController().put(this.url.getHost(), this.url.getPort(), this.url.getPath(), body);
+            return body;
         }
         catch (IOException e) {
             System.err.println("Could not connect to " + this.url.getHost() + ":" + this.url.getPort() + " | " + e.getMessage());
@@ -181,6 +190,10 @@ public class HTTPRequest {
     }
 
     public String httpsRequest() {
+        if (Browser.getCachingController().contains(this.url.getHost(), this.url.getPort(), this.url.getPath())) {
+            return Browser.getCachingController().get(this.url.getHost(), this.url.getPort(), this.url.getPath());
+        }
+
         String key = this.url.getHost() + ":" + this.url.getPort();
         Socket socket = sslSocketPool.get(key);
 
@@ -234,7 +247,10 @@ public class HTTPRequest {
                 throw new IOException("Failed to read the entire body");
             }
 
-            return new String(bodyChars);
+            String body = new String(bodyChars);
+
+            Browser.getCachingController().put(this.url.getHost(), this.url.getPort(), this.url.getPath(), body);
+            return body;
         }
         catch (IOException e) {
             System.err.println("Could not connect to " + this.url.getHost() + ":" + this.url.getPort() + " | " + e.getMessage());
