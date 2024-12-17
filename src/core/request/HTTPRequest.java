@@ -2,7 +2,10 @@ package core.request;
 
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -14,7 +17,6 @@ public class HTTPRequest {
     private final URL url;
     private final short redirectTryCount;
 
-    private static final int FIRST_N_BYTES = 500;
     private static final short MAX_REDIRECT_TRIES = 20;
 
     private static final Map<String, Socket> socketPool = new ConcurrentHashMap<>();
@@ -86,31 +88,11 @@ public class HTTPRequest {
             responseHeaders.put(header.toLowerCase(), value.strip());
         }
 
-        assert !responseHeaders.containsKey("transfer-encoding");
-        assert !responseHeaders.containsKey("content-encoding");
-
-        return responseHeaders;
-    }
-
-    private String processHttpBody(String response) {
-        String[] lines = response.split("\r\n");
-
-        boolean isReadingContent = false;
-        StringBuilder content = new StringBuilder();
-
-        for (String line : lines) {
-            if (line.startsWith("HTTP")) continue;
-
-            if (line.isEmpty()) {
-                isReadingContent = true;
-
-                continue;
-            }
-
-            if (isReadingContent) content.append(line);
+        if (responseHeaders.containsKey("transfer-encoding") || responseHeaders.containsKey("content-encoding")) {
+            throw new RuntimeException("HTTP header contains unsupported transfer encoding.");
         }
 
-        return content.toString();
+        return responseHeaders;
     }
 
     private String getRequestMessage() {
@@ -149,9 +131,18 @@ public class HTTPRequest {
 
             socket.getOutputStream().write(req.getBytes(StandardCharsets.UTF_8));
 
-            String firstResponse = new String(socket.getInputStream().readNBytes(FIRST_N_BYTES), StandardCharsets.UTF_8);
-            String status = this.getResponseStatus(firstResponse);
-            Map<String, String> responseHeaders = processResponseHeaders(firstResponse);
+            InputStream inputStream = socket.getInputStream();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
+            StringBuilder headersBuilder = new StringBuilder();
+            String line;
+
+            while ((line = reader.readLine()) != null && !line.isEmpty()) {
+                headersBuilder.append(line).append("\r\n");
+            }
+
+            String headers = headersBuilder.toString();
+            String status = this.getResponseStatus(headers);
+            Map<String, String> responseHeaders = processResponseHeaders(headers);
 
             // REDIRECT
             if (status.startsWith("3")) {
@@ -167,15 +158,17 @@ public class HTTPRequest {
             }
 
             int contentLength = Integer.parseInt(responseHeaders.get("content-length"));
-            int headersLength = firstResponse.split("\r\n\r\n")[0].length();
+            if (contentLength < 0) {
+                throw new IOException("Invalid or missing Content-Length header");
+            }
 
-            if (contentLength > FIRST_N_BYTES) {
-                String response = new String(socket.getInputStream().readNBytes(contentLength - (FIRST_N_BYTES - headersLength - 4)), StandardCharsets.UTF_8);
-                return this.processHttpBody(firstResponse + response);
+            char[] bodyChars = new char[contentLength];
+            int bytesRead = reader.read(bodyChars, 0, contentLength);
+            if (bytesRead != contentLength) {
+                throw new IOException("Failed to read the entire body");
             }
-            else {
-                return this.processHttpBody(firstResponse);
-            }
+
+            return new String(bodyChars);
         }
         catch (IOException e) {
             System.err.println("Could not connect to " + this.url.getHost() + ":" + this.url.getPort() + " | " + e.getMessage());
@@ -204,9 +197,18 @@ public class HTTPRequest {
 
             socket.getOutputStream().write(req.getBytes(StandardCharsets.UTF_8));
 
-            String firstResponse = new String(socket.getInputStream().readNBytes(FIRST_N_BYTES), StandardCharsets.UTF_8);
-            String status = this.getResponseStatus(firstResponse);
-            Map<String, String> responseHeaders = processResponseHeaders(firstResponse);
+            InputStream inputStream = socket.getInputStream();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
+            StringBuilder headersBuilder = new StringBuilder();
+            String line;
+
+            while ((line = reader.readLine()) != null && !line.isEmpty()) {
+                headersBuilder.append(line).append("\r\n");
+            }
+
+            String headers = headersBuilder.toString();
+            String status = this.getResponseStatus(headers);
+            Map<String, String> responseHeaders = processResponseHeaders(headers);
 
             // REDIRECT
             if (status.startsWith("3")) {
@@ -222,15 +224,17 @@ public class HTTPRequest {
             }
 
             int contentLength = Integer.parseInt(responseHeaders.get("content-length"));
-            int headersLength = firstResponse.split("\r\n\r\n")[0].length();
+            if (contentLength < 0) {
+                throw new IOException("Invalid or missing Content-Length header");
+            }
 
-            if (contentLength > FIRST_N_BYTES) {
-                String response = new String(socket.getInputStream().readNBytes(contentLength - (FIRST_N_BYTES - headersLength - 4)), StandardCharsets.UTF_8);
-                return this.processHttpBody(firstResponse + response);
+            char[] bodyChars = new char[contentLength];
+            int bytesRead = reader.read(bodyChars, 0, contentLength);
+            if (bytesRead != contentLength) {
+                throw new IOException("Failed to read the entire body");
             }
-            else {
-                return this.processHttpBody(firstResponse);
-            }
+
+            return new String(bodyChars);
         }
         catch (IOException e) {
             System.err.println("Could not connect to " + this.url.getHost() + ":" + this.url.getPort() + " | " + e.getMessage());
