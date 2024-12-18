@@ -32,7 +32,6 @@ public class URL {
         this.scheme = parts[0];
         url = parts[1];
 
-        // Currently only HTTP and HTTPS are supported
         String[] supportedSchemes = { "http", "https", "file", "data" };
         assert Arrays.asList(supportedSchemes).contains(this.scheme);
 
