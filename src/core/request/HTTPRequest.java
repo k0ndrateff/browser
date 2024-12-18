@@ -197,8 +197,12 @@ public class HTTPRequest {
             body = new String(bodyChars);
         }
 
-        if (shouldBeCached) {
-            String[] cacheControlParts = responseHeaders.get("cache-control").split("=");
+        if (shouldBeCached && body != null) {
+            String[] cacheControlParts = {};
+
+            if (responseHeaders.containsKey("cache-control")) {
+                cacheControlParts = responseHeaders.get("cache-control").split("=");
+            }
 
             if (cacheControlParts.length == 2) {
                 int maxAge = Integer.parseInt(cacheControlParts[1]);

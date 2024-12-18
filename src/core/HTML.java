@@ -1,8 +1,8 @@
 package core;
 
 public class HTML {
-    public static void printSource(String html) {
-        System.out.println(html);
+    public static String source(String html) {
+        return html;
     }
 
     private static char resolveEntity(String entity) {
@@ -13,7 +13,9 @@ public class HTML {
         };
     }
 
-    public static void printOnlyText(String html) {
+    public static String onlyText(String html) {
+        StringBuilder result = new StringBuilder();
+
         boolean inTag = false;
         StringBuilder entity = new StringBuilder();
 
@@ -29,16 +31,18 @@ public class HTML {
                     entity.append("&");
                 }
                 else if (c == ';' && !entity.isEmpty()) {
-                    System.out.println(HTML.resolveEntity(entity.toString()));
+                    result.append(HTML.resolveEntity(entity.toString()));
                     entity.setLength(0);
                 }
                 else if (!entity.isEmpty()) {
                     entity.append(c);
                 }
                 else {
-                    System.out.print(c);
+                    result.append(c);
                 }
             }
         }
+
+        return result.toString();
     }
 }

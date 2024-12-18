@@ -7,6 +7,7 @@ import java.util.Objects;
 public class Browser {
     private static final String DEFAULT_URL = "file://test.html";
     private static final CachingController cachingController = new CachingController("./cache");
+    private static final WindowController windowController = new WindowController();
 
     public static CachingController getCachingController() {
         return cachingController;
@@ -26,17 +27,21 @@ public class Browser {
             }
         }
 
-        PageController.load(url);
+        String content = PageController.load(url);
+
+        windowController.drawPage(content);
 
         shutdown();
     }
 
     private static void init() {
         cachingController.init();
+        windowController.createWindow();
     }
 
     private static void shutdown() {
         PageController.shutdown();
         cachingController.shutdown();
+        windowController.cleanup();
     }
 }
