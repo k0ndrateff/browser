@@ -1,12 +1,24 @@
 package core;
 
+import core.rendering.Character;
+
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyListener;
+import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
+import java.util.LinkedList;
+import java.util.Objects;
 
-public class WindowController extends JFrame {
+public class WindowController extends JFrame implements KeyListener {
     private static final int WIDTH = 800;
     private static final int HEIGHT = 600;
+
+    final static int HSTEP = 13;
+    final static int VSTEP = 18;
+
+    private int scroll = 0;
+    private final LinkedList<Character> displayList = new LinkedList<>();
 
     private final DrawingCanvas canvas;
 
@@ -29,6 +41,11 @@ public class WindowController extends JFrame {
             g.drawImage(canvasImage, 0, 0, null);
         }
 
+        public void clearScreen() {
+            canvasGraphics.setBackground(Color.WHITE);
+            canvasGraphics.clearRect(0, 0, canvasImage.getWidth(), canvasImage.getHeight());
+        }
+
         public void drawChar(String text, int x, int y) {
             canvasGraphics.setColor(Color.BLACK);
             canvasGraphics.drawString(text, x, y);
@@ -45,6 +62,8 @@ public class WindowController extends JFrame {
         setSize(WIDTH, HEIGHT);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setResizable(false);
+        setFocusable(true);
+        this.addKeyListener(this);
 
         this.canvas = new DrawingCanvas();
         canvas.setBackground(Color.WHITE);
@@ -63,16 +82,22 @@ public class WindowController extends JFrame {
         this.canvas.cleanup();
     }
 
-    private void drawText(String text) {
-        final int HSTEP = 13;
-        final int VSTEP = 18;
-
+    private void layout(String text) {
         int cursorX = HSTEP;
         int cursorY = VSTEP;
 
         for (int i = 0; i < text.length(); i++) {
-            this.canvas.drawChar(String.valueOf(text.charAt(i)), cursorX, cursorY);
-            cursorX += HSTEP;
+            Character character = new Character(String.valueOf(text.charAt(i)), cursorX, cursorY);
+
+            this.displayList.addLast(character);
+
+            if (Objects.equals(character.c, "\n") || Objects.equals(character.c, "\r")) {
+                cursorY += (int) (VSTEP * 1.5);
+                cursorX = HSTEP;
+            }
+            else {
+                cursorX += HSTEP;
+            }
 
             if (cursorX >= WIDTH - HSTEP) {
                 cursorX = HSTEP;
@@ -81,7 +106,37 @@ public class WindowController extends JFrame {
         }
     }
 
+    private void draw() {
+        this.canvas.clearScreen();
+
+        for (Character character : this.displayList) {
+            if (character.y > HEIGHT + this.scroll) continue;
+            if (character.y + VSTEP < this.scroll) continue;
+
+            this.canvas.drawChar(character.c, character.x, character.y - this.scroll);
+        }
+    }
+
+    @Override
+    public void keyPressed(KeyEvent e) {
+        if (e.getKeyCode() == KeyEvent.VK_DOWN) {
+            this.scroll += 10;
+            draw();
+        }
+    }
+
+    @Override
+    public void keyTyped(KeyEvent e) {
+        // No action required
+    }
+
+    public void keyReleased(KeyEvent e) {
+        // No action required
+    }
+
     public void drawPage(String content) {
-        this.drawText(content);
+        this.layout(content);
+
+        this.draw();
     }
 }

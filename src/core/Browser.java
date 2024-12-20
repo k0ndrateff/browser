@@ -42,6 +42,6 @@ public class Browser {
     private static void shutdown() {
         PageController.shutdown();
         cachingController.shutdown();
-        windowController.cleanup();
+//        windowController.cleanup();
     }
 }
