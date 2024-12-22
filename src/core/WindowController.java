@@ -4,13 +4,12 @@ import core.rendering.Character;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.KeyListener;
-import java.awt.event.KeyEvent;
+import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.util.LinkedList;
 import java.util.Objects;
 
-public class WindowController extends JFrame implements KeyListener {
+public class WindowController extends JFrame implements KeyListener, MouseWheelListener {
     private static final int WIDTH = 800;
     private static final int HEIGHT = 600;
 
@@ -27,8 +26,8 @@ public class WindowController extends JFrame implements KeyListener {
         private final BufferedImage canvasImage;
         private final Graphics2D canvasGraphics;
 
-        public DrawingCanvas() {
-            canvasImage = new BufferedImage(WindowController.WIDTH, WindowController.HEIGHT, BufferedImage.TYPE_INT_ARGB);
+        public DrawingCanvas(int width, int height) {
+            canvasImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
             canvasGraphics = canvasImage.createGraphics();
 
             canvasGraphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -64,8 +63,9 @@ public class WindowController extends JFrame implements KeyListener {
         setResizable(false);
         setFocusable(true);
         this.addKeyListener(this);
+        this.addMouseWheelListener(this);
 
-        this.canvas = new DrawingCanvas();
+        this.canvas = new DrawingCanvas(WIDTH, HEIGHT);
         canvas.setBackground(Color.WHITE);
         add(canvas);
 
@@ -99,7 +99,7 @@ public class WindowController extends JFrame implements KeyListener {
                 cursorX += HSTEP;
             }
 
-            if (cursorX >= WIDTH - HSTEP) {
+            if (cursorX >= this.getWidth() - HSTEP) {
                 cursorX = HSTEP;
                 cursorY += VSTEP;
             }
@@ -110,7 +110,7 @@ public class WindowController extends JFrame implements KeyListener {
         this.canvas.clearScreen();
 
         for (Character character : this.displayList) {
-            if (character.y > HEIGHT + this.scroll) continue;
+            if (character.y > this.getHeight() + this.scroll) continue;
             if (character.y + VSTEP < this.scroll) continue;
 
             this.canvas.drawChar(character.c, character.x, character.y - this.scroll);
@@ -123,6 +123,12 @@ public class WindowController extends JFrame implements KeyListener {
             this.scroll += 10;
             draw();
         }
+        if (e.getKeyCode() == KeyEvent.VK_UP) {
+            this.scroll -= 10;
+
+            if (this.scroll < 0) this.scroll = 0;
+            draw();
+        }
     }
 
     @Override
@@ -130,8 +136,17 @@ public class WindowController extends JFrame implements KeyListener {
         // No action required
     }
 
+    @Override
     public void keyReleased(KeyEvent e) {
         // No action required
+    }
+
+    @Override
+    public void mouseWheelMoved(MouseWheelEvent e) {
+        this.scroll += e.getWheelRotation() * 10;
+
+        if (this.scroll < 0) this.scroll = 0;
+        draw();
     }
 
     public void drawPage(String content) {
