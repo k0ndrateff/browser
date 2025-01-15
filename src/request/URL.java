@@ -4,9 +4,9 @@ public class URL {
     private final String url;
 
     private final UrlScheme scheme;
-    private final String host;
-    private final int port;
-    private final String path;
+    private String host;
+    private int port;
+    private String path;
 
     public URL(String url) {
         this.url = url;
@@ -19,7 +19,16 @@ public class URL {
             restUrl += "/";
         }
 
-        String[] hostParts = restUrl.split("/", 2);
+        if (scheme.equals(UrlScheme.HTTP) || scheme.equals(UrlScheme.HTTPS)) {
+            parseHttpUrl(restUrl);
+        }
+        else if (scheme.equals(UrlScheme.FILE)) {
+            parseFileUrl(restUrl);
+        }
+    }
+
+    private void parseHttpUrl(String url) {
+        String[] hostParts = url.split("/", 2);
         String host = hostParts[0];
         this.path = "/" + hostParts[1];
 
@@ -32,6 +41,10 @@ public class URL {
             this.host = host;
             this.port = -1;
         }
+    }
+
+    private void parseFileUrl(String url) {
+        this.path = url;
     }
 
     public UrlScheme getScheme() {

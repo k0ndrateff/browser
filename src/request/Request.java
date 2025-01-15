@@ -17,11 +17,12 @@ public abstract class Request {
         if (url.getScheme().equals(UrlScheme.HTTPS)) {
             return new HttpsRequest(url);
         }
+        if (url.getScheme().equals(UrlScheme.FILE)) {
+            return new FileRequest(url);
+        }
 
         throw new NotImplementedException("Non-HTTP protocol handling");
     }
 
-    public Response make() {
-        throw new AbstractMethodError("Request.make() can be called only from subclasses");
-    }
+    public abstract Response make();
 }
