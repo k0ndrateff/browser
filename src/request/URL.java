@@ -5,6 +5,7 @@ public class URL {
 
     private final UrlScheme scheme;
     private final String host;
+    private final int port;
     private final String path;
 
     public URL(String url) {
@@ -19,8 +20,18 @@ public class URL {
         }
 
         String[] hostParts = restUrl.split("/", 2);
-        this.host = hostParts[0];
+        String host = hostParts[0];
         this.path = "/" + hostParts[1];
+
+        if (host.contains(":")) {
+            String[] hostPort = host.split(":", 2);
+            this.host = hostPort[0];
+            this.port = Integer.parseInt(hostPort[1]);
+        }
+        else {
+            this.host = host;
+            this.port = -1;
+        }
     }
 
     public UrlScheme getScheme() {
@@ -33,5 +44,13 @@ public class URL {
 
     public String getPath() {
         return path;
+    }
+
+    public int getPort() {
+        return port;
+    }
+
+    public boolean isPortDefined() {
+        return port != -1;
     }
 }

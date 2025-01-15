@@ -14,6 +14,9 @@ public abstract class Request {
         if (url.getScheme().equals(UrlScheme.HTTP)) {
             return new HttpRequest(url);
         }
+        if (url.getScheme().equals(UrlScheme.HTTPS)) {
+            return new HttpsRequest(url);
+        }
 
         throw new NotImplementedException("Non-HTTP protocol handling");
     }

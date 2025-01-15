@@ -3,7 +3,8 @@ package request;
 import error.NotImplementedException;
 
 public enum UrlScheme {
-    HTTP("http");
+    HTTP("http"),
+    HTTPS("https");
 
     final String identifier;
 

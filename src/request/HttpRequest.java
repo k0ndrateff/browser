@@ -5,6 +5,7 @@ import error.NotImplementedException;
 import response.HttpResponse;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
@@ -24,32 +25,42 @@ public class HttpRequest extends Request {
         return request;
     }
 
+    protected HttpResponse performRequestWithSocket(Socket socket) throws IOException {
+        socket.getOutputStream().write(getRequestHeader().getBytes(StandardCharsets.UTF_8));
+
+        BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
+
+        StringBuilder headersBuilder = new StringBuilder();
+        String line;
+
+        while ((line = reader.readLine()) != null && !line.isEmpty()) {
+            headersBuilder.append(line).append("\r\n");
+        }
+
+        HttpResponse response = new HttpResponse(headersBuilder.toString());
+
+        StringBuilder bodyBuilder = new StringBuilder();
+
+        // Does not work, implement reading by Content-Length
+        int c;
+        while ((c = reader.read()) != -1) {
+            bodyBuilder.append((char) c);
+        }
+        response.setBody(bodyBuilder.toString());
+
+        return response;
+    }
+
     @Override
     public HttpResponse make() {
-        try (Socket socket = new Socket(this.url.getHost(), DEFAULT_PORT)) {
-            socket.getOutputStream().write(getRequestHeader().getBytes(StandardCharsets.UTF_8));
+        int port = DEFAULT_PORT;
 
-            BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
+        if (this.url.isPortDefined()) {
+            port = this.url.getPort();
+        }
 
-            StringBuilder headersBuilder = new StringBuilder();
-            String line;
-
-            while ((line = reader.readLine()) != null && !line.isEmpty()) {
-                headersBuilder.append(line).append("\r\n");
-            }
-
-            HttpResponse response = new HttpResponse(headersBuilder.toString());
-
-            StringBuilder bodyBuilder = new StringBuilder();
-
-            // Does not work, implement reading by Content-Length
-            int c;
-            while ((c = reader.read()) != -1) {
-                bodyBuilder.append((char) c);
-            }
-            response.setBody(bodyBuilder.toString());
-            
-            return response;
+        try (Socket socket = new Socket(this.url.getHost(), port)) {
+            return this.performRequestWithSocket(socket);
         }
         catch (Exception e) {
             Logger.error(e);
