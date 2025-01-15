@@ -1,20 +1,21 @@
 package response;
 
+import document.HtmlDocument;
 import error.NotImplementedException;
 
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
-public class HttpResponse extends Response {
+public class HttpResponse extends Response<HtmlDocument> {
     private String version;
     private String status;
     private String explanation;
     private Map<String, String> headers;
-    private String body;
+    private HtmlDocument body;
 
     public HttpResponse(String response) {
-        super(response);
+        super();
 
         this.processResponseHeaders(response);
     }
@@ -43,11 +44,12 @@ public class HttpResponse extends Response {
     }
 
     public void setBody(String body) {
-        this.body = body;
+        this.body = new HtmlDocument(body);
+        this.isPending = false;
     }
 
     @Override
-    public String getData() {
+    public HtmlDocument getData() {
         return body;
     }
 }

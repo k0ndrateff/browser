@@ -1,11 +1,14 @@
 package response;
 
-public abstract class Response {
-    String response;
+public abstract class Response<T> {
+    protected T response;
+    protected boolean isPending = true;
 
-    public Response(String response) {
+    public Response() {}
+
+    public Response(T response) {
         this.response = response;
     }
 
-    public abstract String getData();
+    public abstract T getData();
 }
