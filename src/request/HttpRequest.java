@@ -9,20 +9,42 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
 
 public class HttpRequest extends Request {
+    private static final String DEFAULT_METHOD = "GET";
+    private static final String HTTP_VERSION = "HTTP/1.1";
     private static final int DEFAULT_PORT = 80;
 
     public HttpRequest(URL url) {
         super(url);
     }
 
-    private String getRequestHeader() {
-        String request = "GET " + url.getPath() + " HTTP/1.0\r\n";
-        request += "Host: " + url.getHost() + "\r\n";
-        request += "\r\n";
+    private Map<String, String> getRequestHeaders() {
+        Map<String, String> headers = new HashMap<>();
 
-        return request;
+        headers.put("Connection", "close");
+        headers.put("User-Agent", "k0ndrateff/browser");
+
+        return headers;
+    }
+
+    private String getRequestHeader() {
+        Map<String, String> headers = getRequestHeaders();
+
+        StringBuilder request = new StringBuilder(DEFAULT_METHOD + " " + url.getPath() + " " + HTTP_VERSION + "\r\n");
+        request.append("Host: ").append(url.getHost()).append("\r\n");
+
+        if (headers != null) {
+            for (Map.Entry<String, String> header : headers.entrySet()) {
+                request.append(header.getKey()).append(": ").append(header.getValue()).append("\r\n");
+            }
+        }
+
+        request.append("\r\n");
+
+        return request.toString();
     }
 
     protected HttpResponse performRequestWithSocket(Socket socket) throws IOException {
