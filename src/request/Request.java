@@ -20,6 +20,9 @@ public abstract class Request {
         if (url.getScheme().equals(UrlScheme.FILE)) {
             return new FileRequest(url);
         }
+        if (url.getScheme().equals(UrlScheme.DATA)) {
+            return new DataRequest(url);
+        }
 
         throw new NotImplementedException("Non-HTTP protocol handling");
     }

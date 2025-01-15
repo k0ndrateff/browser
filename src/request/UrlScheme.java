@@ -5,7 +5,8 @@ import error.NotImplementedException;
 public enum UrlScheme {
     HTTP("http"),
     HTTPS("https"),
-    FILE("file");
+    FILE("file"),
+    DATA("data");
 
     final String identifier;
 

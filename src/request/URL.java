@@ -11,6 +11,14 @@ public class URL {
     public URL(String url) {
         this.url = url;
 
+        if (url.startsWith(UrlScheme.DATA.identifier)) {
+            this.scheme = UrlScheme.DATA;
+
+            parseDataUrl(url.split(":", 2)[1]);
+
+            return;
+        }
+
         String[] parts = url.split("://", 2);
         this.scheme = UrlScheme.fromIdentifier(parts[0]);
         String restUrl = parts[1];
@@ -44,6 +52,10 @@ public class URL {
     }
 
     private void parseFileUrl(String url) {
+        this.path = url;
+    }
+
+    private void parseDataUrl(String url) {
         this.path = url;
     }
 
