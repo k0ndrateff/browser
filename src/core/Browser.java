@@ -13,6 +13,12 @@ public class Browser {
         }
 
         HtmlDocument response = (HtmlDocument) Request.create(url).make().getData();
-        System.out.println(response.getContent());
+
+        if (url.isViewSource()) {
+            System.out.println(response.getHtml());
+        }
+        else {
+            System.out.println(response.getContent());
+        }
     }
 }

@@ -7,6 +7,10 @@ public class HtmlDocument {
         this.content = content;
     }
 
+    public String getHtml() {
+        return content;
+    }
+
     public String getContent() {
         boolean inTag = false;
         boolean inEntity = false;

@@ -8,8 +8,16 @@ public class URL {
     private int port;
     private String path;
 
+    private boolean isViewSource = false;
+
     public URL(String url) {
         this.url = url;
+
+        if (url.startsWith("view-source:")) {
+            this.isViewSource = true;
+
+            url = url.substring(12);
+        }
 
         if (url.startsWith(UrlScheme.DATA.identifier)) {
             this.scheme = UrlScheme.DATA;
@@ -77,5 +85,9 @@ public class URL {
 
     public boolean isPortDefined() {
         return port != -1;
+    }
+
+    public boolean isViewSource() {
+        return isViewSource;
     }
 }
