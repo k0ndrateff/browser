@@ -24,7 +24,7 @@ public class HttpRequest extends Request {
     private Map<String, String> getRequestHeaders() {
         Map<String, String> headers = new HashMap<>();
 
-        headers.put("Connection", "close");
+        headers.put("Connection", "keep-alive");
         headers.put("User-Agent", "k0ndrateff/browser");
 
         return headers;
@@ -36,10 +36,8 @@ public class HttpRequest extends Request {
         StringBuilder request = new StringBuilder(DEFAULT_METHOD + " " + url.getPath() + " " + HTTP_VERSION + "\r\n");
         request.append("Host: ").append(url.getHost()).append("\r\n");
 
-        if (headers != null) {
-            for (Map.Entry<String, String> header : headers.entrySet()) {
-                request.append(header.getKey()).append(": ").append(header.getValue()).append("\r\n");
-            }
+        for (Map.Entry<String, String> header : headers.entrySet()) {
+            request.append(header.getKey()).append(": ").append(header.getValue()).append("\r\n");
         }
 
         request.append("\r\n");
@@ -61,12 +59,23 @@ public class HttpRequest extends Request {
 
         HttpResponse response = new HttpResponse(headersBuilder.toString());
 
+        int contentLength = 0;
+
+        if (response.getHeaders().containsKey("content-length")) {
+            contentLength = Integer.parseInt(response.getHeaders().get("content-length"));
+        }
+        else {
+            throw new NotImplementedException("Handling HTTP response without Content-Length");
+        }
+
         StringBuilder bodyBuilder = new StringBuilder();
 
-        // Does not work, implement reading by Content-Length
         int c;
-        while ((c = reader.read()) != -1) {
+        int i = 0;
+        while (i < contentLength) {
+            c = reader.read();
             bodyBuilder.append((char) c);
+            i++;
         }
         response.setBody(bodyBuilder.toString());
 
@@ -81,7 +90,7 @@ public class HttpRequest extends Request {
             port = this.url.getPort();
         }
 
-        try (Socket socket = new Socket(this.url.getHost(), port)) {
+        try (Socket socket = SocketPool.getSocket(this.url.getHost(), port)) {
             return this.performRequestWithSocket(socket);
         }
         catch (Exception e) {

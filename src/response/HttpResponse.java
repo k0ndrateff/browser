@@ -33,7 +33,7 @@ public class HttpResponse extends Response<HtmlDocument> {
         for (int i = 1; i < responseParts.length; i++) {
             String[] headerParts = responseParts[i].split(":");
 
-            headers.put(headerParts[0].toLowerCase(Locale.ROOT), headerParts[1].toLowerCase(Locale.ROOT));
+            headers.put(headerParts[0].toLowerCase(Locale.ROOT), headerParts[1].toLowerCase(Locale.ROOT).trim());
         }
 
         this.headers = headers;
@@ -51,5 +51,9 @@ public class HttpResponse extends Response<HtmlDocument> {
     @Override
     public HtmlDocument getData() {
         return body;
+    }
+
+    public Map<String, String> getHeaders() {
+        return headers;
     }
 }

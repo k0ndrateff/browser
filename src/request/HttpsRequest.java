@@ -3,8 +3,6 @@ package request;
 import error.Logger;
 import error.NotImplementedException;
 import response.HttpResponse;
-
-import javax.net.ssl.SSLSocketFactory;
 import java.net.Socket;
 
 public class HttpsRequest extends HttpRequest {
@@ -22,9 +20,7 @@ public class HttpsRequest extends HttpRequest {
             port = this.url.getPort();
         }
 
-        SSLSocketFactory sslSocketFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
-
-        try (Socket socket = sslSocketFactory.createSocket(this.url.getHost(), port)) {
+        try (Socket socket = SocketPool.getSslSocket(this.url.getHost(), port)) {
             return this.performRequestWithSocket(socket);
         }
         catch (Exception e) {
