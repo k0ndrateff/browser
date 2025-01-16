@@ -18,6 +18,9 @@ public class HttpRequest extends Request {
     private static final String HTTP_VERSION = "HTTP/1.1";
     private static final int DEFAULT_PORT = 80;
 
+    private static final int MAX_REDIRECTS = 10;
+    private static int redirectCount = 0;
+
     public HttpRequest(URL url) {
         super(url);
     }
@@ -62,6 +65,10 @@ public class HttpRequest extends Request {
         HttpResponse response = new HttpResponse(headersBuilder.toString());
 
         if (response.getStatus().startsWith("3") && response.getHeaders().containsKey("location")) {
+            if (redirectCount++ > MAX_REDIRECTS) {
+                throw new NotImplementedException("Handling too many redirects");
+            }
+
             Logger.verbose("Redirecting to " + response.getHeaders().get("location"));
 
             return (HttpResponse) Request.create(this.url.getRedirectedUrl(response.getHeaders().get("location"))).make();
