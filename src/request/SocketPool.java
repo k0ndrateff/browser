@@ -1,5 +1,7 @@
 package request;
 
+import error.Logger;
+
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.IOException;
@@ -23,6 +25,8 @@ public class SocketPool {
         String key = getKey(host, port);
 
         if (!socketPool.containsKey(key)) {
+            Logger.verbose("Open socket not found for " + host + ":" + port + ", creating new one...");
+
             Socket socket = new Socket(host, port);
             socket.setSoTimeout(DEFAULT_TIMEOUT);
 
@@ -31,6 +35,8 @@ public class SocketPool {
             return socket;
         }
         else {
+            Logger.verbose("Reusing socket for " + host + ":" + port);
+
             return socketPool.get(key);
         }
     }
@@ -39,6 +45,8 @@ public class SocketPool {
         String key = getKey(host, port);
 
         if (!sslSocketPool.containsKey(key)) {
+            Logger.verbose("Open SSL socket not found for " + host + ":" + port + ", creating new one...");
+
             SSLSocket socket = (SSLSocket) sslSocketFactory.createSocket(host, port);
             socket.setSoTimeout(DEFAULT_TIMEOUT);
 
@@ -47,6 +55,8 @@ public class SocketPool {
             return socket;
         }
         else {
+            Logger.verbose("Reusing SSL socket for " + host + ":" + port);
+
             return sslSocketPool.get(key);
         }
     }

@@ -1,6 +1,7 @@
 package request;
 
 import document.HtmlDocument;
+import error.Logger;
 import response.DataResponse;
 
 public class DataRequest extends Request {
@@ -10,6 +11,8 @@ public class DataRequest extends Request {
 
     @Override
     public DataResponse make() {
+        Logger.verbose("Making data request...");
+
         String[] parts = this.url.getPath().split(",", 2);
 
         return new DataResponse(new HtmlDocument(parts[1]), parts[0]);

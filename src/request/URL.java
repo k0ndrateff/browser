@@ -43,6 +43,24 @@ public class URL {
         }
     }
 
+    private URL(UrlScheme scheme, String host, int port, String path) {
+        this.scheme = scheme;
+        this.host = host;
+        this.port = port;
+        this.path = path;
+
+        this.url = this.constructUrlString(scheme, host, port, path);
+    }
+
+    public URL getRedirectedUrl(String redirectURL) {
+        if (redirectURL.startsWith("/")) {
+            return new URL(scheme, host, port, redirectURL).setViewSource(isViewSource);
+        }
+        else {
+            return new URL(redirectURL).setViewSource(isViewSource);
+        }
+    }
+
     private void parseHttpUrl(String url) {
         String[] hostParts = url.split("/", 2);
         String host = hostParts[0];
@@ -67,6 +85,15 @@ public class URL {
         this.path = url;
     }
 
+    private String constructUrlString(UrlScheme scheme, String host, int port, String path) {
+        if (port != -1) {
+            return scheme + "://" + host + ":" + port + path;
+        }
+        else {
+            return scheme + "://" + host + path;
+        }
+    }
+
     public UrlScheme getScheme() {
         return scheme;
     }
@@ -89,5 +116,11 @@ public class URL {
 
     public boolean isViewSource() {
         return isViewSource;
+    }
+
+    private URL setViewSource(boolean isViewSource) {
+        this.isViewSource = isViewSource;
+
+        return this;
     }
 }

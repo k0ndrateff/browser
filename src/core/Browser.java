@@ -1,6 +1,7 @@
 package core;
 
 import document.HtmlDocument;
+import error.Logger;
 import request.Request;
 import request.URL;
 
@@ -10,11 +11,15 @@ public class Browser {
 
         if (args.length > 0) {
             url = new URL(args[0]);
+
+            Logger.verbose("Found URL in args: " + args[0]);
         }
 
         HtmlDocument response = (HtmlDocument) Request.create(url).make().getData();
 
         if (url.isViewSource()) {
+            Logger.verbose("View-source scheme detected, printing HTML");
+
             System.out.println(response.getHtml());
         }
         else {

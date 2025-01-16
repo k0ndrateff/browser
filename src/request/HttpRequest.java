@@ -6,6 +6,7 @@ import response.HttpResponse;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
@@ -48,7 +49,8 @@ public class HttpRequest extends Request {
     protected HttpResponse performRequestWithSocket(Socket socket) throws IOException {
         socket.getOutputStream().write(getRequestHeader().getBytes(StandardCharsets.UTF_8));
 
-        BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
+        InputStream inputStream = socket.getInputStream();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
 
         StringBuilder headersBuilder = new StringBuilder();
         String line;
@@ -59,9 +61,17 @@ public class HttpRequest extends Request {
 
         HttpResponse response = new HttpResponse(headersBuilder.toString());
 
+        if (response.getStatus().startsWith("3") && response.getHeaders().containsKey("location")) {
+            Logger.verbose("Redirecting to " + response.getHeaders().get("location"));
+
+            return (HttpResponse) Request.create(this.url.getRedirectedUrl(response.getHeaders().get("location"))).make();
+        }
+
         int contentLength = 0;
 
         if (response.getHeaders().containsKey("content-length")) {
+            Logger.verbose("HTTP Content-Length: " + response.getHeaders().get("content-length"));
+
             contentLength = Integer.parseInt(response.getHeaders().get("content-length"));
         }
         else {
@@ -70,13 +80,12 @@ public class HttpRequest extends Request {
 
         StringBuilder bodyBuilder = new StringBuilder();
 
-        int c;
-        int i = 0;
-        while (i < contentLength) {
-            c = reader.read();
-            bodyBuilder.append((char) c);
-            i++;
-        }
+        // TODO: fix this part not receiving full data sometimes
+        char[] buffer = new char[contentLength];
+        int bytesRead = reader.read(buffer, 0, contentLength);
+        
+        bodyBuilder.append(buffer, 0, bytesRead);
+
         response.setBody(bodyBuilder.toString());
 
         return response;
@@ -84,6 +93,8 @@ public class HttpRequest extends Request {
 
     @Override
     public HttpResponse make() {
+        Logger.verbose("Making HTTP request...");
+
         int port = DEFAULT_PORT;
 
         if (this.url.isPortDefined()) {

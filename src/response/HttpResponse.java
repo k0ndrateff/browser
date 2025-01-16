@@ -1,6 +1,7 @@
 package response;
 
 import document.HtmlDocument;
+import error.Logger;
 import error.NotImplementedException;
 
 import java.util.HashMap;
@@ -18,20 +19,22 @@ public class HttpResponse extends Response<HtmlDocument> {
         super();
 
         this.processResponseHeaders(response);
+
+        Logger.verbose("Received " + version + " response: " + status + " " + explanation);
     }
 
     private void processResponseHeaders(String response) {
         Map<String, String> headers = new HashMap<>();
 
         String[] responseParts = response.split("\r\n");
-        String[] statusLineParts = responseParts[0].split(" ");
+        String[] statusLineParts = responseParts[0].split(" ", 3);
 
         version = statusLineParts[0];
         status = statusLineParts[1];
         explanation = statusLineParts[2];
 
         for (int i = 1; i < responseParts.length; i++) {
-            String[] headerParts = responseParts[i].split(":");
+            String[] headerParts = responseParts[i].split(":", 2);
 
             headers.put(headerParts[0].toLowerCase(Locale.ROOT), headerParts[1].toLowerCase(Locale.ROOT).trim());
         }
@@ -55,5 +58,9 @@ public class HttpResponse extends Response<HtmlDocument> {
 
     public Map<String, String> getHeaders() {
         return headers;
+    }
+
+    public String getStatus() {
+        return status;
     }
 }

@@ -1,5 +1,7 @@
 package document;
 
+import error.Logger;
+
 public class HtmlDocument {
     private final String content;
 
@@ -30,6 +32,7 @@ public class HtmlDocument {
                 else if (c == ';' && inEntity) {
                     inEntity = false;
                     contentBuilder.append(resolveEntity(entityBuilder.toString()));
+                    entityBuilder.setLength(0);
                 }
                 else if (inEntity) {
                     entityBuilder.append(c);
@@ -44,6 +47,8 @@ public class HtmlDocument {
     }
 
     private String resolveEntity(String entity) {
+        Logger.verbose("Resolving HTML entity: " + entity);
+
         return switch (entity) {
             case "lt" -> "<";
             case "gt" -> ">";

@@ -14,6 +14,8 @@ public class HttpsRequest extends HttpRequest {
 
     @Override
     public HttpResponse make() {
+        Logger.verbose("Making HTTPS request...");
+
         int port = DEFAULT_PORT;
 
         if (this.url.isPortDefined()) {
