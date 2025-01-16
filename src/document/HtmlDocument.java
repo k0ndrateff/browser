@@ -9,8 +9,10 @@ public class HtmlDocument {
 
     public String getContent() {
         boolean inTag = false;
+        boolean inEntity = false;
 
         StringBuilder contentBuilder = new StringBuilder();
+        StringBuilder entityBuilder = new StringBuilder();
 
         for (char c : content.toCharArray()) {
             if (c == '<') {
@@ -18,10 +20,30 @@ public class HtmlDocument {
             } else if (c == '>') {
                 inTag = false;
             } else if (!inTag) {
-                contentBuilder.append(c);
+                if (c == '&') {
+                    inEntity = true;
+                }
+                else if (c == ';' && inEntity) {
+                    inEntity = false;
+                    contentBuilder.append(resolveEntity(entityBuilder.toString()));
+                }
+                else if (inEntity) {
+                    entityBuilder.append(c);
+                }
+                else {
+                    contentBuilder.append(c);
+                }
             }
         }
 
         return contentBuilder.toString();
+    }
+
+    private String resolveEntity(String entity) {
+        return switch (entity) {
+            case "lt" -> "<";
+            case "gt" -> ">";
+            default -> "";
+        };
     }
 }
