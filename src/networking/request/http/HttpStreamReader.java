@@ -1,5 +1,6 @@
 package networking.request.http;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -20,6 +21,36 @@ public class HttpStreamReader {
 
         return headersBuilder.toString();
     }
+    
+    public byte[] readChunkedBody() throws IOException {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        String line;
+    
+        while ((line = readLine()) != null) {
+            int chunkSize = Integer.parseInt(line.trim(), 16);
+
+            if (chunkSize == 0) {
+                readLine();
+                break;
+            }
+    
+            byte[] chunk = new byte[chunkSize];
+            int totalBytesRead = 0;
+    
+            while (totalBytesRead < chunkSize) {
+                int bytesRead = inputStream.read(chunk, totalBytesRead, chunkSize - totalBytesRead);
+                if (bytesRead == -1) {
+                    throw new IOException("Unexpected end of stream while reading chunked body");
+                }
+                totalBytesRead += bytesRead;
+            }
+    
+            outputStream.write(chunk);
+            readLine();
+        }
+    
+        return outputStream.toByteArray();
+    }
 
     public byte[] readBody(int contentLength) throws IOException {
         byte[] body = new byte[contentLength];
@@ -27,9 +58,11 @@ public class HttpStreamReader {
 
         while (totalBytesRead < contentLength) {
             int bytesRead = inputStream.read(body, totalBytesRead, contentLength - totalBytesRead);
+            
             if (bytesRead == -1) {
-                break; // End of stream
+                break;
             }
+            
             totalBytesRead += bytesRead;
         }
 
@@ -43,7 +76,7 @@ public class HttpStreamReader {
     private String readLine() throws IOException {
         StringBuilder line = new StringBuilder();
         int prev = -1, curr;
-
+    
         while ((curr = inputStream.read()) != -1) {
             if (prev == '\r' && curr == '\n') {
                 break;
@@ -53,7 +86,7 @@ public class HttpStreamReader {
             }
             prev = curr;
         }
-
-        return line.toString();
+    
+        return line.length() > 0 || prev != -1 ? line.toString() : null; // Return null if end of stream is reached
     }
 }

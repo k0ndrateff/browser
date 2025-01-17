@@ -53,10 +53,6 @@ public class HttpResponse extends Response<HtmlDocument> {
         }
 
         this.headers = headers;
-
-        if (headers.containsKey("transfer-encoding") || headers.containsKey("content-encoding")) {
-            throw new NotImplementedException("HTTP Response encoding");
-        }
     }
 
     public void setBody(String body) {
@@ -91,6 +87,20 @@ public class HttpResponse extends Response<HtmlDocument> {
         }
 
         else return null;
+    }
+
+    public String getContentEncoding() {
+        return headers.get("content-encoding");
+    }
+
+    public boolean isTransferEncodingChunked() {
+        if (headers.containsKey("transfer-encoding")) {
+            if (headers.get("transfer-encoding").equals("chunked")) return true;
+
+            throw new NotImplementedException("Handling non-chunked transfer-encoding");
+        }
+
+        return false;
     }
 
     public URL getUrl() {

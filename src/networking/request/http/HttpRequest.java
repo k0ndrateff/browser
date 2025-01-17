@@ -30,6 +30,7 @@ public class HttpRequest extends Request {
 
         headers.put("Connection", "keep-alive");
         headers.put("User-Agent", "k0ndrateff/browser");
+        headers.put("Accept-Encoding", "gzip");
 
         return headers;
     }
@@ -63,11 +64,20 @@ public class HttpRequest extends Request {
             Logger.verbose("HTTP Content-Length: " + contentLength);
         }
         else {
-            throw new NotImplementedException("Handling HTTP networking.response without Content-Length");
+            Logger.verbose("No Content-Length, possibly HTTP Transfer-Encoding: chunked");
         }
 
-        byte[] bodyBytes = reader.readBody(contentLength);
-        response.setBody(new String(bodyBytes, StandardCharsets.UTF_8));
+        byte[] bodyBytes;
+
+        if (response.isTransferEncodingChunked()) {
+            bodyBytes = reader.readChunkedBody();
+        }
+        else {
+            bodyBytes = reader.readBody(contentLength);
+        }
+
+        String decodedBody = HttpCompression.decode(bodyBytes, response.getContentEncoding());
+        response.setBody(decodedBody);
 
         String redirectLocation = response.getRedirectLocation();
 
