@@ -1,4 +1,4 @@
-package request;
+package networking;
 
 public class URL {
     private final String url;

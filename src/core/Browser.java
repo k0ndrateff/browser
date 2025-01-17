@@ -2,8 +2,8 @@ package core;
 
 import document.HtmlDocument;
 import error.Logger;
-import request.Request;
-import request.URL;
+import networking.request.Request;
+import networking.URL;
 
 public class Browser {
     public static void main(String[] args) {

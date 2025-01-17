@@ -1,8 +1,9 @@
-package request;
+package networking.request;
 
 import document.HtmlDocument;
 import error.Logger;
-import response.DataResponse;
+import networking.URL;
+import networking.response.DataResponse;
 
 public class DataRequest extends Request {
     public DataRequest(URL url) {
@@ -11,7 +12,7 @@ public class DataRequest extends Request {
 
     @Override
     public DataResponse make() {
-        Logger.verbose("Making data request...");
+        Logger.verbose("Making data networking.request...");
 
         String[] parts = this.url.getPath().split(",", 2);
 

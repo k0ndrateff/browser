@@ -1,4 +1,4 @@
-package response;
+package networking.response;
 
 import document.HtmlDocument;
 import error.Logger;
@@ -20,7 +20,7 @@ public class HttpResponse extends Response<HtmlDocument> {
 
         this.processResponseHeaders(response);
 
-        Logger.verbose("Received " + version + " response: " + status + " " + explanation);
+        Logger.verbose("Received " + version + " networking.response: " + status + " " + explanation);
     }
 
     private void processResponseHeaders(String response) {

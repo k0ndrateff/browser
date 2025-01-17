@@ -1,4 +1,4 @@
-package response;
+package networking.response;
 
 import document.HtmlDocument;
 

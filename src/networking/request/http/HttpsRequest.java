@@ -1,8 +1,9 @@
-package request;
+package networking.request.http;
 
 import error.Logger;
 import error.NotImplementedException;
-import response.HttpResponse;
+import networking.URL;
+import networking.response.HttpResponse;
 import java.net.Socket;
 
 public class HttpsRequest extends HttpRequest {
@@ -14,7 +15,7 @@ public class HttpsRequest extends HttpRequest {
 
     @Override
     public HttpResponse make() {
-        Logger.verbose("Making HTTPS request...");
+        Logger.verbose("Making HTTPS networking.request...");
 
         int port = DEFAULT_PORT;
 

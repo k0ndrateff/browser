@@ -1,4 +1,4 @@
-package request;
+package networking.request.http;
 
 import error.Logger;
 

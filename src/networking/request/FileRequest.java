@@ -1,8 +1,9 @@
-package request;
+package networking.request;
 
 import error.Logger;
 import error.NotImplementedException;
-import response.FileResponse;
+import networking.URL;
+import networking.response.FileResponse;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -14,7 +15,7 @@ public class FileRequest extends Request {
 
     @Override
     public FileResponse make() {
-        Logger.verbose("Making file request...");
+        Logger.verbose("Making file networking.request...");
 
         File file = new File(this.url.getPath());
         StringBuilder result = new StringBuilder();

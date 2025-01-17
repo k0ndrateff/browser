@@ -1,7 +1,11 @@
-package request;
+package networking.request;
 
 import error.NotImplementedException;
-import response.Response;
+import networking.URL;
+import networking.UrlScheme;
+import networking.request.http.HttpRequest;
+import networking.request.http.HttpsRequest;
+import networking.response.Response;
 
 public abstract class Request {
     protected URL url;

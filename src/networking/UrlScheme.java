@@ -1,4 +1,4 @@
-package request;
+package networking;
 
 import error.NotImplementedException;
 

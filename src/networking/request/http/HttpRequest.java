@@ -1,8 +1,10 @@
-package request;
+package networking.request.http;
 
 import error.Logger;
 import error.NotImplementedException;
-import response.HttpResponse;
+import networking.request.Request;
+import networking.URL;
+import networking.response.HttpResponse;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -61,7 +63,7 @@ public class HttpRequest extends Request {
             Logger.verbose("HTTP Content-Length: " + contentLength);
         }
         else {
-            throw new NotImplementedException("Handling HTTP response without Content-Length");
+            throw new NotImplementedException("Handling HTTP networking.response without Content-Length");
         }
 
         byte[] bodyBytes = reader.readBody(contentLength);
@@ -84,7 +86,7 @@ public class HttpRequest extends Request {
 
     @Override
     public HttpResponse make() {
-        Logger.verbose("Making HTTP request...");
+        Logger.verbose("Making HTTP networking.request...");
 
         int port = DEFAULT_PORT;
 

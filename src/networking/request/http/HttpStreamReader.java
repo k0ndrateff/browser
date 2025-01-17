@@ -1,4 +1,4 @@
-package request;
+package networking.request.http;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,7 +34,7 @@ public class HttpStreamReader {
         }
 
         if (totalBytesRead < contentLength) {
-            throw new IOException("Incomplete response body received. Expected " + contentLength + " bytes, got " + totalBytesRead);
+            throw new IOException("Incomplete networking.response body received. Expected " + contentLength + " bytes, got " + totalBytesRead);
         }
 
         return body;
