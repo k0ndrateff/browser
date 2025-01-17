@@ -4,10 +4,8 @@ import error.Logger;
 import error.NotImplementedException;
 import response.HttpResponse;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -53,26 +51,9 @@ public class HttpRequest extends Request {
         socket.getOutputStream().write(getRequestHeader().getBytes(StandardCharsets.UTF_8));
 
         InputStream inputStream = socket.getInputStream();
-        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
+        HttpStreamReader reader = new HttpStreamReader(inputStream);
 
-        StringBuilder headersBuilder = new StringBuilder();
-        String line;
-
-        while ((line = reader.readLine()) != null && !line.isEmpty()) {
-            headersBuilder.append(line).append("\r\n");
-        }
-
-        HttpResponse response = new HttpResponse(headersBuilder.toString());
-
-        if (response.getStatus().startsWith("3") && response.getHeaders().containsKey("location")) {
-            if (redirectCount++ > MAX_REDIRECTS) {
-                throw new NotImplementedException("Handling too many redirects");
-            }
-
-            Logger.verbose("Redirecting to " + response.getHeaders().get("location"));
-
-            return (HttpResponse) Request.create(this.url.getRedirectedUrl(response.getHeaders().get("location"))).make();
-        }
+        HttpResponse response = new HttpResponse(reader.readHeaders());
 
         int contentLength = 0;
 
@@ -85,15 +66,18 @@ public class HttpRequest extends Request {
             throw new NotImplementedException("Handling HTTP response without Content-Length");
         }
 
-        StringBuilder bodyBuilder = new StringBuilder();
+        byte[] bodyBytes = reader.readBody(contentLength);
+        response.setBody(new String(bodyBytes, StandardCharsets.UTF_8));
 
-        // TODO: fix this part not receiving full data sometimes
-        char[] buffer = new char[contentLength];
-        int bytesRead = reader.read(buffer, 0, contentLength);
-        
-        bodyBuilder.append(buffer, 0, bytesRead);
+        if (response.getStatus().startsWith("3") && response.getHeaders().containsKey("location")) {
+            if (redirectCount++ > MAX_REDIRECTS) {
+                throw new NotImplementedException("Handling too many redirects");
+            }
 
-        response.setBody(bodyBuilder.toString());
+            Logger.verbose("Redirecting to " + response.getHeaders().get("location"));
+
+            return (HttpResponse) Request.create(this.url.getRedirectedUrl(response.getHeaders().get("location"))).make();
+        }
 
         return response;
     }
