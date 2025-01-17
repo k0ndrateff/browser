@@ -63,4 +63,20 @@ public class HttpResponse extends Response<HtmlDocument> {
     public String getStatus() {
         return status;
     }
+
+    public int getContentLength() {
+        if (headers.containsKey("content-length")) {
+            return Integer.parseInt(headers.get("content-length"));
+        }
+
+        return 0;
+    }
+
+    public String getRedirectLocation() {
+        if (status.startsWith("3") && headers.containsKey("location")) {
+            return headers.get("location");
+        }
+
+        else return null;
+    }
 }

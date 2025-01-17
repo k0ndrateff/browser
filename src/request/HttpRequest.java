@@ -55,12 +55,10 @@ public class HttpRequest extends Request {
 
         HttpResponse response = new HttpResponse(reader.readHeaders());
 
-        int contentLength = 0;
+        int contentLength = response.getContentLength();
 
-        if (response.getHeaders().containsKey("content-length")) {
-            Logger.verbose("HTTP Content-Length: " + response.getHeaders().get("content-length"));
-
-            contentLength = Integer.parseInt(response.getHeaders().get("content-length"));
+        if (contentLength != 0) {
+            Logger.verbose("HTTP Content-Length: " + contentLength);
         }
         else {
             throw new NotImplementedException("Handling HTTP response without Content-Length");
@@ -69,14 +67,16 @@ public class HttpRequest extends Request {
         byte[] bodyBytes = reader.readBody(contentLength);
         response.setBody(new String(bodyBytes, StandardCharsets.UTF_8));
 
-        if (response.getStatus().startsWith("3") && response.getHeaders().containsKey("location")) {
+        String redirectLocation = response.getRedirectLocation();
+
+        if (redirectLocation != null) {
             if (redirectCount++ > MAX_REDIRECTS) {
                 throw new NotImplementedException("Handling too many redirects");
             }
 
             Logger.verbose("Redirecting to " + response.getHeaders().get("location"));
 
-            return (HttpResponse) Request.create(this.url.getRedirectedUrl(response.getHeaders().get("location"))).make();
+            return (HttpResponse) Request.create(this.url.getRedirectedUrl(redirectLocation)).make();
         }
 
         return response;
