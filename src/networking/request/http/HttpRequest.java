@@ -88,18 +88,18 @@ public class HttpRequest extends Request {
 
     @Override
     public HttpResponse make() {
+        HttpResponse response = HttpCache.retrieve(this.url);
+
+        if (response != null) {
+            return response;
+        }
+
         Logger.verbose("Making HTTP request...");
 
         int port = DEFAULT_PORT;
 
         if (this.url.isPortDefined()) {
             port = this.url.getPort();
-        }
-
-        HttpResponse response = HttpCache.retrieve(this.url);
-
-        if (response != null) {
-            return response;
         }
 
         try (Socket socket = SocketPool.getSocket(this.url.getHost(), port)) {

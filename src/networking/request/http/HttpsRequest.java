@@ -15,18 +15,18 @@ public class HttpsRequest extends HttpRequest {
 
     @Override
     public HttpResponse make() {
+        HttpResponse response = HttpCache.retrieve(this.url);
+
+        if (response != null) {
+            return response;
+        }
+
         Logger.verbose("Making HTTPS request...");
 
         int port = DEFAULT_PORT;
 
         if (this.url.isPortDefined()) {
             port = this.url.getPort();
-        }
-
-        HttpResponse response = HttpCache.retrieve(this.url);
-
-        if (response != null) {
-            return response;
         }
 
         try (Socket socket = SocketPool.getSslSocket(this.url.getHost(), port)) {
