@@ -15,7 +15,7 @@ public class FileRequest extends Request {
 
     @Override
     public FileResponse make() {
-        Logger.verbose("Making file networking.request...");
+        Logger.verbose("Making file request...");
 
         File file = new File(this.url.getPath());
         StringBuilder result = new StringBuilder();

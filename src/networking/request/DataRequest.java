@@ -12,7 +12,7 @@ public class DataRequest extends Request {
 
     @Override
     public DataResponse make() {
-        Logger.verbose("Making data networking.request...");
+        Logger.verbose("Making data request...");
 
         String[] parts = this.url.getPath().split(",", 2);
 

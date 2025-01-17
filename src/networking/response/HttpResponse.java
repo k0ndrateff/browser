@@ -3,24 +3,37 @@ package networking.response;
 import document.HtmlDocument;
 import error.Logger;
 import error.NotImplementedException;
+import networking.URL;
 
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
 public class HttpResponse extends Response<HtmlDocument> {
+    private final URL url;
+
     private String version;
     private String status;
     private String explanation;
     private Map<String, String> headers;
     private HtmlDocument body;
 
-    public HttpResponse(String response) {
+    private boolean isRetrievedFromCache = false;
+
+    public HttpResponse(URL url) {
         super();
 
+        this.url = url;
+        this.isRetrievedFromCache = true;
+    }
+
+    public HttpResponse(URL url, String response) {
+        super();
+
+        this.url = url;
         this.processResponseHeaders(response);
 
-        Logger.verbose("Received " + version + " networking.response: " + status + " " + explanation);
+        Logger.verbose("Received " + version + " response: " + status + " " + explanation);
     }
 
     private void processResponseHeaders(String response) {
@@ -78,5 +91,9 @@ public class HttpResponse extends Response<HtmlDocument> {
         }
 
         else return null;
+    }
+
+    public URL getUrl() {
+        return url;
     }
 }

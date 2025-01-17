@@ -4,9 +4,12 @@ import document.HtmlDocument;
 import error.Logger;
 import networking.request.Request;
 import networking.URL;
+import networking.request.http.HttpCache;
 
 public class Browser {
     public static void main(String[] args) {
+        HttpCache.init();
+
         URL url = new URL("http://example.org/");
 
         if (args.length > 0) {

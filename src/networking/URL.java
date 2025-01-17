@@ -87,10 +87,10 @@ public class URL {
 
     private String constructUrlString(UrlScheme scheme, String host, int port, String path) {
         if (port != -1) {
-            return scheme + "://" + host + ":" + port + path;
+            return scheme.identifier + "://" + host + ":" + port + path;
         }
         else {
-            return scheme + "://" + host + path;
+            return scheme.identifier + "://" + host + path;
         }
     }
 
@@ -122,5 +122,9 @@ public class URL {
         this.isViewSource = isViewSource;
 
         return this;
+    }
+
+    public String getCanonicalUrl() {
+        return this.constructUrlString(this.scheme, this.host, this.port, this.path);
     }
 }

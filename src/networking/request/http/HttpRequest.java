@@ -55,7 +55,7 @@ public class HttpRequest extends Request {
         InputStream inputStream = socket.getInputStream();
         HttpStreamReader reader = new HttpStreamReader(inputStream);
 
-        HttpResponse response = new HttpResponse(reader.readHeaders());
+        HttpResponse response = new HttpResponse(this.url, reader.readHeaders());
 
         int contentLength = response.getContentLength();
 
@@ -81,17 +81,25 @@ public class HttpRequest extends Request {
             return (HttpResponse) Request.create(this.url.getRedirectedUrl(redirectLocation)).make();
         }
 
+        HttpCache.store(response);
+
         return response;
     }
 
     @Override
     public HttpResponse make() {
-        Logger.verbose("Making HTTP networking.request...");
+        Logger.verbose("Making HTTP request...");
 
         int port = DEFAULT_PORT;
 
         if (this.url.isPortDefined()) {
             port = this.url.getPort();
+        }
+
+        HttpResponse response = HttpCache.retrieve(this.url);
+
+        if (response != null) {
+            return response;
         }
 
         try (Socket socket = SocketPool.getSocket(this.url.getHost(), port)) {
