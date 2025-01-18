@@ -1,5 +1,7 @@
 package rendering;
 
+import error.Logger;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -19,12 +21,20 @@ public class PageCanvas extends JComponent implements KeyListener, MouseWheelLis
         addMouseWheelListener(this);
     }
 
+    public void changeSize(int width, int height) {
+        Logger.verbose("Browser window resized to " + width + "×" + height);
+
+        setSize(width, height);
+    }
+
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
 
+        g.clearRect(0, 0, getWidth(), getHeight());
+
         if (displayList != null) {
             for (RenderingComponent component : displayList) {
-                if (component.getPosition().y > scrollY + 600) continue;
+                if (component.getPosition().y > scrollY + getHeight()) continue;
                 if (component.getPosition().y + 18 < scrollY) continue;
 
                 component.paint(g, scrollY);

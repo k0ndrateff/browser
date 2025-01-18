@@ -7,6 +7,7 @@ import java.util.Queue;
 import java.util.concurrent.LinkedTransferQueue;
 
 public class DisplayList {
+    private String text;
     private final Queue<RenderingComponent> displayList = new LinkedTransferQueue<>();
 
     public void layoutText(String text, Point position, int width) {
