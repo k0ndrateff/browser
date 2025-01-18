@@ -4,7 +4,9 @@ import error.Logger;
 
 import java.awt.*;
 import java.util.ArrayDeque;
+import java.util.Arrays;
 import java.util.Deque;
+import java.util.Objects;
 
 public class DisplayList {
     private String text;
@@ -18,11 +20,15 @@ public class DisplayList {
         int cursorX = position.x + hStep;
         int cursorY = position.y + vStep;
 
-        for (char c : text.toCharArray()) {
-            if (c == '\n') {
+        for (String c : this.splitText(text)) {
+            if (Objects.equals(c, "\n")) {
                 cursorX = position.x + hStep;
 
                 cursorY += vStep;
+            } else if (Emoji.isEmoji(c)) {
+                displayList.add(new Emoji(c, new Point(cursorX, cursorY)));
+
+                cursorX += hStep;
             } else {
                 displayList.add(new Character(String.valueOf(c), new Point(cursorX, cursorY)));
 
@@ -34,6 +40,15 @@ public class DisplayList {
                 cursorY += vStep;
             }
         }
+    }
+
+    private String[] splitText(String text) {
+        int[] codePoints = text.codePoints().toArray();
+
+
+        return Arrays.stream(codePoints)
+                .mapToObj(java.lang.Character::toString)
+                .toArray(String[]::new);
     }
 
     public Deque<RenderingComponent> getDisplayList() {
