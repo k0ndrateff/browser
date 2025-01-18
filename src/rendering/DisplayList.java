@@ -18,9 +18,15 @@ public class DisplayList {
         int cursorY = position.y + vStep;
 
         for (char c : text.toCharArray()) {
-            displayList.add(new Character(String.valueOf(c), new Point(cursorX, cursorY)));
+            if (c == '\n') {
+                cursorX = position.x + hStep;
 
-            cursorX += hStep;
+                cursorY += vStep;
+            } else {
+                displayList.add(new Character(String.valueOf(c), new Point(cursorX, cursorY)));
+
+                cursorX += hStep;
+            }
 
             if (cursorX >= width - hStep) {
                 cursorX = position.x + hStep;

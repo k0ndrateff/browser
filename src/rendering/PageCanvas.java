@@ -44,12 +44,20 @@ public class PageCanvas extends JComponent implements KeyListener {
             this.scrollY += SCROLL_SPEED;
             repaint();
         }
+        if (e.getKeyCode() == KeyEvent.VK_UP) {
+            this.scrollY -= SCROLL_SPEED;
+            repaint();
+        }
     }
 
     @Override
     public void keyPressed(KeyEvent e) {
         if (e.getKeyCode() == KeyEvent.VK_DOWN) {
             this.scrollY += SCROLL_SPEED;
+            repaint();
+        }
+        if (e.getKeyCode() == KeyEvent.VK_UP) {
+            this.scrollY -= SCROLL_SPEED;
             repaint();
         }
     }
