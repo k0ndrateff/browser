@@ -9,13 +9,12 @@ import java.util.Deque;
 import java.util.Objects;
 
 public class DisplayList {
-    private String text;
     private final Deque<RenderingComponent> displayList = new ArrayDeque<>();
 
-    public void layoutText(String text, Point position, int width) {
+    public void layoutText(String text, Point position, int width, boolean isRtl) {
         Logger.verbose("Laying out text...");
 
-        int hStep = 13;
+        int hStep = isRtl ? -13 : 13;
         int vStep = 18;
         int cursorX = position.x + hStep;
         int cursorY = position.y + vStep;
@@ -44,7 +43,6 @@ public class DisplayList {
 
     private String[] splitText(String text) {
         int[] codePoints = text.codePoints().toArray();
-
 
         return Arrays.stream(codePoints)
                 .mapToObj(java.lang.Character::toString)
