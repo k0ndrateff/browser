@@ -31,6 +31,8 @@ public class PageCanvas extends JComponent implements KeyListener, MouseWheelLis
     }
 
     public int getDrawingWidth() {
+        if (scrollBar.getMaximum() == 0) return getWidth();
+
         return getWidth() - scrollBar.getWidth();
     }
 
@@ -57,7 +59,13 @@ public class PageCanvas extends JComponent implements KeyListener, MouseWheelLis
 
     public void setText(DisplayList displayList) {
         this.displayList = displayList;
-        scrollBar.setMaximum(displayList.getLastEntryY());
+
+        if (displayList.getLastEntryY() > getHeight()) {
+            scrollBar.setMaximum(displayList.getLastEntryY());
+        }
+        else {
+            scrollBar.setMaximum(0);
+        }
 
         repaint();
     }
