@@ -15,6 +15,10 @@ public abstract class Request {
     }
 
     public static Request create(URL url) {
+        if (url.isAboutBlank()) {
+            return new DataRequest(url);
+        }
+
         if (url.getScheme().equals(UrlScheme.HTTP)) {
             return new HttpRequest(url);
         }

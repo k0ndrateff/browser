@@ -20,7 +20,16 @@ public class Browser {
             Logger.verbose("Found URL in args: " + args[0]);
         }
 
-        HtmlDocument response = (HtmlDocument) Request.create(url).make().getData();
+        HtmlDocument response;
+
+        try {
+            response = (HtmlDocument) Request.create(url).make().getData();
+        }
+        catch (Exception e) {
+            Logger.error(e);
+            Logger.verbose("Request failed, redirecting to about:blank");
+            response = (HtmlDocument) Request.create(URL.aboutBlank()).make().getData();
+        }
 
         if (url.isViewSource()) {
             Logger.verbose("View-source scheme detected, printing HTML");

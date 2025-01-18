@@ -56,6 +56,10 @@ public class DisplayList {
     }
 
     public int getLastEntryY() {
+        if (displayList.isEmpty()) {
+            return 0;
+        }
+
         return displayList.getLast().getPosition().y;
     }
 }

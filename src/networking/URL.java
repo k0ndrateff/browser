@@ -3,15 +3,22 @@ package networking;
 public class URL {
     private final String url;
 
-    private final UrlScheme scheme;
+    private UrlScheme scheme;
     private String host;
     private int port;
     private String path;
 
     private boolean isViewSource = false;
+    private boolean isAboutBlank = false;
 
     public URL(String url) {
         this.url = url;
+
+        if (url.equals("about:blank")) {
+            this.isAboutBlank = true;
+
+            return;
+        }
 
         if (url.startsWith("view-source:")) {
             this.isViewSource = true;
@@ -50,6 +57,10 @@ public class URL {
         this.path = path;
 
         this.url = this.constructUrlString(scheme, host, port, path);
+    }
+
+    public static URL aboutBlank() {
+        return new URL("about:blank");
     }
 
     public URL getRedirectedUrl(String redirectURL) {
@@ -122,6 +133,10 @@ public class URL {
         this.isViewSource = isViewSource;
 
         return this;
+    }
+
+    public boolean isAboutBlank() {
+        return isAboutBlank;
     }
 
     public String getCanonicalUrl() {
