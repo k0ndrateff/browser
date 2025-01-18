@@ -2,11 +2,10 @@ package rendering;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
+import java.awt.event.*;
 import java.util.Queue;
 
-public class PageCanvas extends JComponent implements KeyListener {
+public class PageCanvas extends JComponent implements KeyListener, MouseWheelListener {
     private static final int SCROLL_SPEED = 20;
 
     Queue<RenderingComponent> displayList;
@@ -17,6 +16,7 @@ public class PageCanvas extends JComponent implements KeyListener {
         setSize(800, 600);
         setFocusable(true);
         addKeyListener(this);
+        addMouseWheelListener(this);
     }
 
     protected void paintComponent(Graphics g) {
@@ -46,6 +46,8 @@ public class PageCanvas extends JComponent implements KeyListener {
         }
         if (e.getKeyCode() == KeyEvent.VK_UP) {
             this.scrollY -= SCROLL_SPEED;
+
+            if (scrollY < 0) scrollY = 0;
             repaint();
         }
     }
@@ -58,12 +60,20 @@ public class PageCanvas extends JComponent implements KeyListener {
         }
         if (e.getKeyCode() == KeyEvent.VK_UP) {
             this.scrollY -= SCROLL_SPEED;
+
+            if (scrollY < 0) scrollY = 0;
             repaint();
         }
     }
 
     @Override
-    public void keyReleased(KeyEvent e) {
-        // No action required
-    }
+    public void keyReleased(KeyEvent e) {}
+
+    @Override
+        public void mouseWheelMoved(MouseWheelEvent e) {
+            scrollY += e.getWheelRotation() * SCROLL_SPEED;
+
+            if (scrollY < 0) scrollY = 0;
+            repaint();
+        }
 }
