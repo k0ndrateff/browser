@@ -5,12 +5,11 @@ import error.Logger;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.util.Queue;
 
 public class PageCanvas extends JComponent implements KeyListener, MouseWheelListener {
     private static final int SCROLL_SPEED = 20;
 
-    Queue<RenderingComponent> displayList;
+    DisplayList displayList;
 
     private int scrollY = 0;
 
@@ -33,7 +32,7 @@ public class PageCanvas extends JComponent implements KeyListener, MouseWheelLis
         g.clearRect(0, 0, getWidth(), getHeight());
 
         if (displayList != null) {
-            for (RenderingComponent component : displayList) {
+            for (RenderingComponent component : displayList.getDisplayList()) {
                 if (component.getPosition().y > scrollY + getHeight()) continue;
                 if (component.getPosition().y + 18 < scrollY) continue;
 
@@ -42,7 +41,7 @@ public class PageCanvas extends JComponent implements KeyListener, MouseWheelLis
         }
     }
 
-    public void setText(Queue<RenderingComponent> displayList) {
+    public void setText(DisplayList displayList) {
         this.displayList = displayList;
 
         repaint();
@@ -52,6 +51,8 @@ public class PageCanvas extends JComponent implements KeyListener, MouseWheelLis
     public void keyTyped(KeyEvent e) {
         if (e.getKeyCode() == KeyEvent.VK_DOWN) {
             this.scrollY += SCROLL_SPEED;
+
+            if (scrollY > displayList.getLastEntryY()) scrollY = displayList.getLastEntryY();
             repaint();
         }
         if (e.getKeyCode() == KeyEvent.VK_UP) {
@@ -66,6 +67,8 @@ public class PageCanvas extends JComponent implements KeyListener, MouseWheelLis
     public void keyPressed(KeyEvent e) {
         if (e.getKeyCode() == KeyEvent.VK_DOWN) {
             this.scrollY += SCROLL_SPEED;
+
+            if (scrollY > displayList.getLastEntryY()) scrollY = displayList.getLastEntryY();
             repaint();
         }
         if (e.getKeyCode() == KeyEvent.VK_UP) {
@@ -84,6 +87,7 @@ public class PageCanvas extends JComponent implements KeyListener, MouseWheelLis
             scrollY += e.getWheelRotation() * SCROLL_SPEED;
 
             if (scrollY < 0) scrollY = 0;
+            if (scrollY > displayList.getLastEntryY()) scrollY = displayList.getLastEntryY();
             repaint();
         }
 }

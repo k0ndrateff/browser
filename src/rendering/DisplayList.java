@@ -3,12 +3,12 @@ package rendering;
 import error.Logger;
 
 import java.awt.*;
-import java.util.Queue;
-import java.util.concurrent.LinkedTransferQueue;
+import java.util.ArrayDeque;
+import java.util.Deque;
 
 public class DisplayList {
     private String text;
-    private final Queue<RenderingComponent> displayList = new LinkedTransferQueue<>();
+    private final Deque<RenderingComponent> displayList = new ArrayDeque<>();
 
     public void layoutText(String text, Point position, int width) {
         Logger.verbose("Laying out text...");
@@ -36,7 +36,11 @@ public class DisplayList {
         }
     }
 
-    public Queue<RenderingComponent> getDisplayList() {
+    public Deque<RenderingComponent> getDisplayList() {
         return displayList;
+    }
+
+    public int getLastEntryY() {
+        return displayList.getLast().getPosition().y;
     }
 }
