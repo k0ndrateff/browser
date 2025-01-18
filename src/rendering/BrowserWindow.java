@@ -35,7 +35,7 @@ public class BrowserWindow extends JFrame implements ComponentListener {
         this.text = text;
 
         displayList = new DisplayList();
-        displayList.layoutText(text, TEXT_POSITION, this.getWidth());
+        displayList.layoutText(text, TEXT_POSITION, canvas.getDrawingWidth());
         canvas.setText(displayList);
 
         repaint();
