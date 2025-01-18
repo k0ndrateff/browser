@@ -5,10 +5,12 @@ import error.Logger;
 import networking.request.Request;
 import networking.URL;
 import networking.request.http.HttpCache;
+import rendering.BrowserWindow;
 
 public class Browser {
     public static void main(String[] args) {
         HttpCache.init();
+        BrowserWindow window = new BrowserWindow();
 
         URL url = new URL("http://example.org/");
 
@@ -23,10 +25,10 @@ public class Browser {
         if (url.isViewSource()) {
             Logger.verbose("View-source scheme detected, printing HTML");
 
-            System.out.println(response.getHtml());
+            window.displayText(response.getHtml());
         }
         else {
-            System.out.println(response.getContent());
+            window.displayText(response.getContent());
         }
     }
 }
