@@ -52,6 +52,10 @@ public class HtmlDocument {
         return switch (entity) {
             case "lt" -> "<";
             case "gt" -> ">";
+            case "amp" -> " &";
+            case "quot" -> "\"";
+            case "apos" -> "'";
+            case "nbsp" -> " ";
             default -> "";
         };
     }

@@ -3,6 +3,7 @@ package rendering;
 import java.awt.*;
 
 public class Character extends RenderingComponent {
+    private final Font font = new Font("SF Pro", Font.PLAIN, 16);
     private final String character;
     private int scrollY;
 
@@ -21,6 +22,7 @@ public class Character extends RenderingComponent {
         super.paintComponent(g);
 
         g.setColor(Color.BLACK);
+        g.setFont(font);
         g.drawString(character, position.x, position.y - scrollY);
     }
 }

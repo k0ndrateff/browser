@@ -35,7 +35,7 @@ public class BrowserWindow extends JFrame implements ComponentListener {
         this.text = text;
         this.isRtl = isRtl;
 
-        Point textPosition = isRtl ? new Point(canvas.getDrawingWidth() - 20, 0) : new Point(0, 0);
+        Point textPosition = isRtl ? new Point(canvas.getDrawingWidth() - 40, 20) : new Point(20, 20);
 
         displayList = new DisplayList();
         displayList.layoutText(text, textPosition, canvas.getDrawingWidth(), isRtl);
