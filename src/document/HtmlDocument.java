@@ -2,6 +2,8 @@ package document;
 
 import error.Logger;
 
+import java.util.ArrayList;
+
 public class HtmlDocument {
     private final String content;
 
@@ -9,41 +11,67 @@ public class HtmlDocument {
         this.content = content;
     }
 
-    public String getHtml() {
+    public ArrayList<Entity> getHtml() {
+        ArrayList<Entity> entities = new ArrayList<>();
+        entities.add(new Text(content));
+
+        return entities;
+    }
+
+    public String getHtmlString() {
         return content;
     }
 
-    public String getContent() {
+    public ArrayList<Entity> getContent() {
         boolean inTag = false;
         boolean inEntity = false;
 
-        StringBuilder contentBuilder = new StringBuilder();
-        StringBuilder entityBuilder = new StringBuilder();
+        ArrayList<Entity> entities = new ArrayList<>();
+
+        StringBuilder buffer = new StringBuilder();
+        StringBuilder htmlEntityBuilder = new StringBuilder();
 
         for (char c : content.toCharArray()) {
             if (c == '<') {
                 inTag = true;
+
+                if (!buffer.isEmpty()) {
+                    entities.add(new Text(buffer.toString()));
+                }
+
+                buffer.setLength(0);
             } else if (c == '>') {
                 inTag = false;
+
+                entities.add(new Tag(buffer.toString()));
+
+                buffer.setLength(0);
             } else if (!inTag) {
                 if (c == '&') {
                     inEntity = true;
                 }
                 else if (c == ';' && inEntity) {
                     inEntity = false;
-                    contentBuilder.append(resolveEntity(entityBuilder.toString()));
-                    entityBuilder.setLength(0);
+                    buffer.append(resolveEntity(htmlEntityBuilder.toString()));
+                    htmlEntityBuilder.setLength(0);
                 }
                 else if (inEntity) {
-                    entityBuilder.append(c);
+                    htmlEntityBuilder.append(c);
                 }
                 else {
-                    contentBuilder.append(c);
+                    buffer.append(c);
                 }
+            }
+            else {
+                buffer.append(c);
             }
         }
 
-        return contentBuilder.toString();
+        if (!buffer.isEmpty() && !inTag) {
+            entities.add(new Text(buffer.toString()));
+        }
+
+        return entities;
     }
 
     private String resolveEntity(String entity) {

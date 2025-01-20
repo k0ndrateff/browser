@@ -1,9 +1,12 @@
 package rendering;
 
+import document.Entity;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
+import java.util.ArrayList;
 
 public class BrowserWindow extends JFrame implements ComponentListener {
     private static final int WIDTH = 800;
@@ -11,7 +14,7 @@ public class BrowserWindow extends JFrame implements ComponentListener {
 
     private final PageCanvas canvas;
 
-    private String text;
+    private ArrayList<Entity> tokens;
     private DisplayList displayList;
     private boolean isRtl;
 
@@ -31,14 +34,14 @@ public class BrowserWindow extends JFrame implements ComponentListener {
         add(canvas);
     }
 
-    public void displayText(String text, boolean isRtl) {
-        this.text = text;
+    public void displayText(ArrayList<Entity> tokens, boolean isRtl) {
+        this.tokens = tokens;
         this.isRtl = isRtl;
 
         Point textPosition = isRtl ? new Point(canvas.getDrawingWidth() - 40, 20) : new Point(20, 20);
 
         displayList = new DisplayList();
-        displayList.layoutText(text, textPosition, canvas.getDrawingWidth(), isRtl);
+        displayList.layoutText(tokens, textPosition, canvas.getDrawingWidth(), isRtl);
         canvas.setText(displayList);
 
         repaint();
@@ -48,7 +51,7 @@ public class BrowserWindow extends JFrame implements ComponentListener {
     public void componentResized(ComponentEvent e) {
         if (canvas != null) {
             canvas.changeSize(getWidth(), getHeight());
-            displayText(text, isRtl);
+            displayText(tokens, isRtl);
         }
     }
 

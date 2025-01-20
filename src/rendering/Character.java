@@ -3,13 +3,14 @@ package rendering;
 import java.awt.*;
 
 public class Character extends RenderingComponent {
-    private final Font font = new Font("SF Pro", Font.PLAIN, 16);
+    private final Font font;
     private final String character;
     private int scrollY;
 
-    public Character(String character, Point position) {
+    public Character(String character, Point position, Font font) {
         this.character = character;
         this.position = position;
+        this.font = font;
     }
 
     public void paint(Graphics g, int scrollY) {
