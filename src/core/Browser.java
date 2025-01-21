@@ -15,16 +15,11 @@ public class Browser {
         BrowserWindow window = new BrowserWindow();
 
         URL url = new URL("http://example.org/");
-        boolean isRtl = false;
 
         if (args.length > 0) {
             url = new URL(args[0]);
 
             Logger.verbose("Found URL in args: " + args[0]);
-        }
-
-        if (Arrays.asList(args).contains("--rtl")) {
-            isRtl = true;
         }
 
         HtmlDocument response;
@@ -38,13 +33,15 @@ public class Browser {
             response = (HtmlDocument) Request.create(URL.aboutBlank()).make().getData();
         }
 
+        if (Arrays.asList(args).contains("--rtl")) {
+            response.setRtl(true);
+        }
+
         if (url.isViewSource()) {
             Logger.verbose("View-source scheme detected, printing HTML");
+            response.setViewSource(true);
+        }
 
-            window.displayText(response.getHtml(), isRtl);
-        }
-        else {
-            window.displayText(response.getContent(), isRtl);
-        }
+        window.renderHtmlDocument(response);
     }
 }

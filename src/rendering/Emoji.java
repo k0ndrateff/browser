@@ -60,23 +60,23 @@ public class Emoji extends RenderingComponent {
     }
 
     @Override
-    public void paint(Graphics g, int scrollY) {
+    public void paint(Graphics g, PaintingContext ctx) {
         File file = getFile();
 
         if (!file.exists()) {
             Logger.verbose("Emoji from file " + file.getAbsolutePath() + "  not found! Rendering as text instead...");
 
-            g.drawString(String.valueOf(emoji), position.x, position.y - scrollY);
+            g.drawString(String.valueOf(emoji), position.x, position.y - ctx.getScrollY());
         }
         else {
             try {
                 BufferedImage img = ImageIO.read(file);
 
                 // TODO: somehow calculate magic number 12, which is emoji image offset
-                g.drawImage(img, position.x, position.y - scrollY - 12, SIZE, SIZE, null);
+                g.drawImage(img, position.x, position.y - ctx.getScrollY() - 12, SIZE, SIZE, null);
             } catch (IOException e) {
                 Logger.error(e);
-                g.drawString(String.valueOf(emoji), position.x, position.y - scrollY);
+                g.drawString(String.valueOf(emoji), position.x, position.y - ctx.getScrollY());
             }
         }
     }

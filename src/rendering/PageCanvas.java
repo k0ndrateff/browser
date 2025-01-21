@@ -8,10 +8,12 @@ import java.awt.event.*;
 
 public class PageCanvas extends JComponent implements KeyListener, MouseWheelListener {
     private static final int SCROLL_SPEED = 20;
-    JScrollBar scrollBar = new JScrollBar(JScrollBar.VERTICAL);
     private int scrollY = 0;
 
-    DisplayList displayList;
+    JScrollBar scrollBar = new JScrollBar(JScrollBar.VERTICAL);
+
+    TextRenderer renderer;
+    PaintingContext paintingContext = new PaintingContext(scrollY);
 
     public PageCanvas() {
         setSize(800, 600);
@@ -47,21 +49,21 @@ public class PageCanvas extends JComponent implements KeyListener, MouseWheelLis
 
         g.clearRect(0, 0, getDrawingWidth(), getHeight());
 
-        if (displayList != null) {
-            for (RenderingComponent component : displayList.getDisplayList()) {
+        if (renderer != null) {
+            for (RenderingComponent component : renderer.getDisplayList()) {
                 if (component.getPosition().y > scrollY + getHeight()) continue;
                 if (component.getPosition().y + 18 < scrollY) continue;
 
-                component.paint(g, scrollY);
+                component.paint(g, paintingContext);
             }
         }
     }
 
-    public void setText(DisplayList displayList) {
-        this.displayList = displayList;
+    public void setText(TextRenderer displayList) {
+        this.renderer = displayList;
 
-        if (displayList.getLastEntryY() > getHeight()) {
-            scrollBar.setMaximum(displayList.getLastEntryY());
+        if (displayList.getLastDisplayListEntryY() > getHeight()) {
+            scrollBar.setMaximum(displayList.getLastDisplayListEntryY());
         }
         else {
             scrollBar.setMaximum(0);
@@ -72,28 +74,19 @@ public class PageCanvas extends JComponent implements KeyListener, MouseWheelLis
 
     @Override
     public void keyTyped(KeyEvent e) {
-        if (e.getKeyCode() == KeyEvent.VK_DOWN) {
-            this.scrollY += SCROLL_SPEED;
-
-            if (scrollY > displayList.getLastEntryY()) scrollY = displayList.getLastEntryY();
-            repaint();
-        }
-        if (e.getKeyCode() == KeyEvent.VK_UP) {
-            this.scrollY -= SCROLL_SPEED;
-
-            if (scrollY < 0) scrollY = 0;
-            repaint();
-        }
-
-        scrollBar.setValue(scrollY);
+        handleKeyEvent(e);
     }
 
     @Override
     public void keyPressed(KeyEvent e) {
+        handleKeyEvent(e);
+    }
+
+    private void handleKeyEvent(KeyEvent e) {
         if (e.getKeyCode() == KeyEvent.VK_DOWN) {
             this.scrollY += SCROLL_SPEED;
 
-            if (scrollY > displayList.getLastEntryY()) scrollY = displayList.getLastEntryY();
+            if (scrollY > renderer.getLastDisplayListEntryY()) scrollY = renderer.getLastDisplayListEntryY();
             repaint();
         }
         if (e.getKeyCode() == KeyEvent.VK_UP) {
@@ -103,6 +96,7 @@ public class PageCanvas extends JComponent implements KeyListener, MouseWheelLis
             repaint();
         }
 
+        paintingContext.setScrollY(scrollY);
         scrollBar.setValue(scrollY);
     }
 
@@ -114,9 +108,10 @@ public class PageCanvas extends JComponent implements KeyListener, MouseWheelLis
         scrollY += e.getWheelRotation() * SCROLL_SPEED;
 
         if (scrollY < 0) scrollY = 0;
-        if (scrollY > displayList.getLastEntryY()) scrollY = displayList.getLastEntryY();
+        if (scrollY > renderer.getLastDisplayListEntryY()) scrollY = renderer.getLastDisplayListEntryY();
         repaint();
 
+        paintingContext.setScrollY(scrollY);
         scrollBar.setValue(scrollY);
     }
 }

@@ -1,13 +1,13 @@
 package document;
 
-public class Tag extends Entity {
+public class HtmlTag extends HtmlLayoutEntity {
     private final String name;
 
-    public Tag(String name) {
+    public HtmlTag(String name) {
         this.name = name;
     }
 
-    public String getContent() {
+    public String toString() {
         return name;
     }
 }

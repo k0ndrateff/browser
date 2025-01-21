@@ -1,6 +1,7 @@
 package rendering;
 
-import document.Entity;
+import document.HtmlDocument;
+import document.HtmlLayoutEntity;
 
 import javax.swing.*;
 import java.awt.*;
@@ -14,9 +15,9 @@ public class BrowserWindow extends JFrame implements ComponentListener {
 
     private final PageCanvas canvas;
 
-    private ArrayList<Entity> tokens;
-    private DisplayList displayList;
-    private boolean isRtl;
+    private HtmlDocument htmlDocument;
+    private ArrayList<HtmlLayoutEntity> entities;
+    private final RenderingContext renderingContext;
 
     public BrowserWindow() {
         super("k0ndrateff/browser");
@@ -32,17 +33,24 @@ public class BrowserWindow extends JFrame implements ComponentListener {
 
         canvas = new PageCanvas();
         add(canvas);
+
+        this.renderingContext = new RenderingContext();
+        renderingContext.setWidth(canvas.getDrawingWidth());
     }
 
-    public void displayText(ArrayList<Entity> tokens, boolean isRtl) {
-        this.tokens = tokens;
-        this.isRtl = isRtl;
+    public void renderHtmlDocument(HtmlDocument document) {
+        this.htmlDocument = document;
+        this.entities = document.getContent();
 
-        Point textPosition = isRtl ? new Point(canvas.getDrawingWidth() - 40, 20) : new Point(20, 20);
+        renderingContext.setBaseTextPosition(document.isRtl() ? new Point(canvas.getDrawingWidth() - 40, 20) : new Point(20, 20));
 
-        displayList = new DisplayList();
-        displayList.layoutText(tokens, textPosition, canvas.getDrawingWidth(), isRtl);
-        canvas.setText(displayList);
+        rerenderCurrentDocument();
+    }
+
+    private void rerenderCurrentDocument() {
+        TextRenderer renderer = new TextRenderer(renderingContext, htmlDocument.isRtl());
+        renderer.render(entities);
+        canvas.setText(renderer);
 
         repaint();
     }
@@ -51,7 +59,9 @@ public class BrowserWindow extends JFrame implements ComponentListener {
     public void componentResized(ComponentEvent e) {
         if (canvas != null) {
             canvas.changeSize(getWidth(), getHeight());
-            displayText(tokens, isRtl);
+            renderingContext.setWidth(canvas.getDrawingWidth());
+
+            rerenderCurrentDocument();
         }
     }
 

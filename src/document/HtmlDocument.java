@@ -6,14 +6,16 @@ import java.util.ArrayList;
 
 public class HtmlDocument {
     private final String content;
+    private boolean isRtl;
+    private boolean isViewSource;
 
     public HtmlDocument(String content) {
         this.content = content;
     }
 
-    public ArrayList<Entity> getHtml() {
-        ArrayList<Entity> entities = new ArrayList<>();
-        entities.add(new Text(content));
+    private ArrayList<HtmlLayoutEntity> parseHtml() {
+        ArrayList<HtmlLayoutEntity> entities = new ArrayList<>();
+        entities.add(new HtmlText(content));
 
         return entities;
     }
@@ -22,11 +24,11 @@ public class HtmlDocument {
         return content;
     }
 
-    public ArrayList<Entity> getContent() {
+    private ArrayList<HtmlLayoutEntity> parseContent() {
         boolean inTag = false;
         boolean inEntity = false;
 
-        ArrayList<Entity> entities = new ArrayList<>();
+        ArrayList<HtmlLayoutEntity> entities = new ArrayList<>();
 
         StringBuilder buffer = new StringBuilder();
         StringBuilder htmlEntityBuilder = new StringBuilder();
@@ -36,14 +38,14 @@ public class HtmlDocument {
                 inTag = true;
 
                 if (!buffer.isEmpty()) {
-                    entities.add(new Text(buffer.toString()));
+                    entities.add(new HtmlText(buffer.toString()));
                 }
 
                 buffer.setLength(0);
             } else if (c == '>') {
                 inTag = false;
 
-                entities.add(new Tag(buffer.toString()));
+                entities.add(new HtmlTag(buffer.toString()));
 
                 buffer.setLength(0);
             } else if (!inTag) {
@@ -68,7 +70,7 @@ public class HtmlDocument {
         }
 
         if (!buffer.isEmpty() && !inTag) {
-            entities.add(new Text(buffer.toString()));
+            entities.add(new HtmlText(buffer.toString()));
         }
 
         return entities;
@@ -86,5 +88,24 @@ public class HtmlDocument {
             case "nbsp" -> " ";
             default -> "";
         };
+    }
+
+    public ArrayList<HtmlLayoutEntity> getContent() {
+        if (isViewSource)
+            return parseHtml();
+        else
+            return parseContent();
+    }
+
+    public void setRtl(boolean rtl) {
+        this.isRtl = rtl;
+    }
+
+    public boolean isRtl() {
+        return isRtl;
+    }
+
+    public void setViewSource(boolean viewSource) {
+        this.isViewSource = viewSource;
     }
 }
