@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.time.Instant;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -57,12 +58,14 @@ public class HttpCache {
     }
 
     private static void clearDeadCache() {
-        for (HttpCacheEntry entry : cache.values()) {
-            if (!entry.isFresh()) {
-                File contentFile = new File(CACHE_DIR, entry.getUuid().toString());
+        Iterator<Map.Entry<String, HttpCacheEntry>> iterator = cache.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<String, HttpCacheEntry> entry = iterator.next();
+            if (!entry.getValue().isFresh()) {
+                File contentFile = new File(CACHE_DIR, entry.getValue().getUuid().toString());
                 contentFile.delete();
 
-                cache.remove(entry.getUrl());
+                iterator.remove(); // Safe removal using iterator
             }
         }
     }
