@@ -71,7 +71,7 @@ public class TextRenderer {
     }
 
     private void processHtmlText(HtmlText text) {
-        Font font = new Font("SF Pro", fontStyle, fontSize);
+        Font font = FontCache.retrieve("SF Pro", fontStyle, fontSize);
         int direction = isRtl ? -1 : 1;
 
         for (String tk : splitText(text.toString())) {
