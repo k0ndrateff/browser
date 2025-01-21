@@ -26,6 +26,8 @@ public class PageCanvas extends JComponent implements KeyListener, MouseWheelLis
         scrollBar.setUnitIncrement(SCROLL_SPEED);
         scrollBar.addAdjustmentListener(e -> {
             scrollY = e.getValue();
+
+            paintingContext.setScrollY(scrollY);
             repaint();
         });
 
@@ -33,8 +35,6 @@ public class PageCanvas extends JComponent implements KeyListener, MouseWheelLis
     }
 
     public int getDrawingWidth() {
-        if (scrollBar.getMaximum() == 0) return getWidth();
-
         return getWidth() - scrollBar.getWidth();
     }
 
@@ -63,13 +63,17 @@ public class PageCanvas extends JComponent implements KeyListener, MouseWheelLis
         this.renderer = displayList;
 
         if (displayList.getLastDisplayListEntryY() > getHeight()) {
-            scrollBar.setMaximum(displayList.getLastDisplayListEntryY());
+            scrollBar.setMaximum(getMaxScrollY());
         }
         else {
             scrollBar.setMaximum(0);
         }
 
         repaint();
+    }
+
+    private int getMaxScrollY() {
+        return renderer.getLastDisplayListEntryY() - getHeight() + 20;
     }
 
     @Override
@@ -86,7 +90,7 @@ public class PageCanvas extends JComponent implements KeyListener, MouseWheelLis
         if (e.getKeyCode() == KeyEvent.VK_DOWN) {
             this.scrollY += SCROLL_SPEED;
 
-            if (scrollY > renderer.getLastDisplayListEntryY()) scrollY = renderer.getLastDisplayListEntryY();
+            if (scrollY > getMaxScrollY()) scrollY = getMaxScrollY();
             repaint();
         }
         if (e.getKeyCode() == KeyEvent.VK_UP) {
@@ -108,7 +112,7 @@ public class PageCanvas extends JComponent implements KeyListener, MouseWheelLis
         scrollY += e.getWheelRotation() * SCROLL_SPEED;
 
         if (scrollY < 0) scrollY = 0;
-        if (scrollY > renderer.getLastDisplayListEntryY()) scrollY = renderer.getLastDisplayListEntryY();
+        if (scrollY > getMaxScrollY()) scrollY = getMaxScrollY();
         repaint();
 
         paintingContext.setScrollY(scrollY);
