@@ -7,17 +7,22 @@ import error.Logger;
 
 import java.awt.*;
 import java.awt.font.FontRenderContext;
+import java.awt.font.LineMetrics;
 import java.awt.geom.AffineTransform;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 public class TextRenderer {
+    public static final FontRenderContext FRC = new FontRenderContext(new AffineTransform(), true, false);
+    public static final int DEFAULT_LINE_HEIGHT = 20;
+
     private final boolean isRtl;
     private final RenderingContext ctx;
 
     private final Deque<RenderingComponent> displayList = new ArrayDeque<>();
-    FontRenderContext frc = new FontRenderContext(new AffineTransform(), true, false);
+    private final Deque<Text> lineBuffer = new ArrayDeque<>();
 
     private int cursorX;
     private int cursorY;
@@ -43,6 +48,8 @@ public class TextRenderer {
                 processHtmlText((HtmlText) token);
             }
         }
+
+        this.flushLineBuffer();
     }
 
     private void processHtmlTag(HtmlTag tag) {
@@ -57,6 +64,7 @@ public class TextRenderer {
             case "/small" -> fontSize += 2;
             case "big" -> fontSize += 4;
             case "/big" -> fontSize -= 4;
+            case "br /", "/p" -> flushLineBuffer();
             case null, default -> {
             }
         }
@@ -67,14 +75,11 @@ public class TextRenderer {
         int direction = isRtl ? -1 : 1;
 
         for (String tk : splitText(text.toString())) {
-            int wordWidth = (int) font.getStringBounds(tk, frc).getWidth();
-            int whitespaceWidth = (int) font.getStringBounds(" ", frc).getWidth();
-            int lineHeight = (int) ((int) font.getLineMetrics(tk, frc).getHeight() * 1.25);
+            int wordWidth = (int) font.getStringBounds(tk, FRC).getWidth();
+            int whitespaceWidth = (int) font.getStringBounds(" ", FRC).getWidth();
 
             if (Objects.equals(tk, "\n")) {
-                cursorX = ctx.getBaseTextPosition().x;
-
-                cursorY += lineHeight;
+                this.flushLineBuffer();
             }
             else if (Emoji.isEmoji(tk)) {
                 displayList.add(new Emoji(tk, new Point(cursorX, cursorY), fontSize));
@@ -82,16 +87,40 @@ public class TextRenderer {
                 cursorX += 16 * direction;
             }
             else {
-                displayList.add(new Text(tk, new Point(cursorX, cursorY), font));
+                lineBuffer.add(new Text(tk, new Point(cursorX, 0), font));
 
                 cursorX += (wordWidth + whitespaceWidth) * direction;
             }
 
             if (cursorX + wordWidth >= ctx.getWidth()) {
-                cursorX = ctx.getBaseTextPosition().x;
-                cursorY += lineHeight;
+                this.flushLineBuffer();
             }
         }
+    }
+
+    private void flushLineBuffer() {
+        if (lineBuffer.isEmpty()) {
+            cursorY += DEFAULT_LINE_HEIGHT;
+
+            return;
+        }
+
+        Stream<LineMetrics> ascentMetrics = lineBuffer.stream().map(Text::getFontMetrics);
+        float maxAscent = Collections.max(ascentMetrics.map(LineMetrics::getAscent).toList());
+        float baseline = cursorY + 1.25f * maxAscent;
+
+        for (Text word : lineBuffer) {
+            int y = (int) ((int) baseline - maxAscent);
+            word.setPositionY(y);
+            displayList.add(word);
+        }
+
+        Stream<LineMetrics> descentMetrics = lineBuffer.stream().map(Text::getFontMetrics);
+        float maxDescent = Collections.max(descentMetrics.map(LineMetrics::getDescent).toList());
+        cursorY = (int) ((int) baseline + 1.25f * maxDescent);
+
+        cursorX = ctx.getBaseTextPosition().x;
+        lineBuffer.clear();
     }
 
     private static boolean containsEmojiOrNewline(String word) {

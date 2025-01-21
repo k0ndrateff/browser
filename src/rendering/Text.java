@@ -1,6 +1,7 @@
 package rendering;
 
 import java.awt.*;
+import java.awt.font.LineMetrics;
 
 public class Text extends RenderingComponent {
     private final Font font;
@@ -16,5 +17,13 @@ public class Text extends RenderingComponent {
         g.setColor(Color.BLACK);
         g.setFont(font);
         g.drawString(text, position.x, position.y - ctx.getScrollY());
+    }
+
+    public LineMetrics getFontMetrics() {
+        return font.getLineMetrics(text, TextRenderer.FRC);
+    }
+
+    public void setPositionY(int positionY) {
+        position.y = positionY;
     }
 }
