@@ -22,6 +22,7 @@ public class TextRenderer {
     private int cursorX;
     private int cursorY;
     private int fontStyle = Font.PLAIN;
+    private int fontSize = 16;
 
     public TextRenderer(RenderingContext ctx, boolean isRtl) {
         this.ctx = ctx;
@@ -47,19 +48,22 @@ public class TextRenderer {
     private void processHtmlTag(HtmlTag tag) {
         String tk = tag.toString();
 
-        if (Objects.equals(tk, "i")) {
-            fontStyle = Font.ITALIC;
-        }
-        else if (Objects.equals(tk, "b")) {
-            fontStyle = Font.BOLD;
-        }
-        else if (Objects.equals(tk, "/i") || Objects.equals(tk, "/b")) {
-            fontStyle = Font.PLAIN;
+
+        switch (tk) {
+            case "i" -> fontStyle = Font.ITALIC;
+            case "b" -> fontStyle = Font.BOLD;
+            case "/i", "/b" -> fontStyle = Font.PLAIN;
+            case "small" -> fontSize -= 2;
+            case "/small" -> fontSize += 2;
+            case "big" -> fontSize += 4;
+            case "/big" -> fontSize -= 4;
+            case null, default -> {
+            }
         }
     }
 
     private void processHtmlText(HtmlText text) {
-        Font font = new Font("SF Pro", fontStyle, 16);
+        Font font = new Font("SF Pro", fontStyle, fontSize);
         int direction = isRtl ? -1 : 1;
 
         for (String tk : splitText(text.toString())) {
@@ -73,7 +77,7 @@ public class TextRenderer {
                 cursorY += lineHeight;
             }
             else if (Emoji.isEmoji(tk)) {
-                displayList.add(new Emoji(tk, new Point(cursorX, cursorY)));
+                displayList.add(new Emoji(tk, new Point(cursorX, cursorY), fontSize));
 
                 cursorX += 16 * direction;
             }

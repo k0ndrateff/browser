@@ -14,12 +14,12 @@ import java.util.stream.Collectors;
 public class Emoji extends RenderingComponent {
     private static final String EMOJI_DIR = "emojis";
     private final String emoji;
+    private final int size;
 
-    private static final int SIZE = 16;
-
-    public Emoji(String emoji, Point position) {
+    public Emoji(String emoji, Point position, int size) {
         this.emoji = emoji;
         this.position = position;
+        this.size = size;
     }
 
     public static boolean isEmoji(String ch) {
@@ -73,7 +73,7 @@ public class Emoji extends RenderingComponent {
                 BufferedImage img = ImageIO.read(file);
 
                 // TODO: somehow calculate magic number 12, which is emoji image offset
-                g.drawImage(img, position.x, position.y - ctx.getScrollY() - 12, SIZE, SIZE, null);
+                g.drawImage(img, position.x, position.y - ctx.getScrollY() - 12, size, size, null);
             } catch (IOException e) {
                 Logger.error(e);
                 g.drawString(String.valueOf(emoji), position.x, position.y - ctx.getScrollY());
