@@ -29,6 +29,7 @@ public class TextRenderer {
     private int fontStyle = Font.PLAIN;
     private int fontSize = 16;
     private boolean isLineCentered = false;
+    private TextRenderingProperty property = TextRenderingProperty.PLAIN;
 
     public TextRenderer(RenderingContext ctx, boolean isRtl) {
         this.ctx = ctx;
@@ -67,6 +68,14 @@ public class TextRenderer {
             case "/big" -> fontSize -= 4;
             case "br /", "/p", "/center", "/h1" -> flushLineBuffer();
             case "center", "h1 class=\"title\"" -> isLineCentered = true;
+            case "sup" -> {
+                property = TextRenderingProperty.SUPERSCRIPT;
+                fontSize /= 2;
+            }
+            case "/sup" -> {
+                property = TextRenderingProperty.PLAIN;
+                fontSize *= 2;
+            }
             case null, default -> {
             }
         }
@@ -89,7 +98,7 @@ public class TextRenderer {
                 cursorX += 16 * direction;
             }
             else {
-                lineBuffer.add(new Text(tk, new Point(cursorX, 0), font));
+                lineBuffer.add(new Text(tk, new Point(cursorX, 0), font, property));
 
                 cursorX += (wordWidth + whitespaceWidth) * direction;
             }
@@ -122,8 +131,15 @@ public class TextRenderer {
         float baseline = cursorY + 1.25f * maxAscent;
 
         for (Text word : lineBuffer) {
-            int y = (int) ((int) baseline - maxAscent);
-            word.setPositionY(y);
+            if (word.getProperty() == TextRenderingProperty.SUPERSCRIPT) {
+                int y = (int) ((int) baseline - 2 * maxAscent);
+                word.setPositionY(y);
+            }
+            else {
+                int y = (int) ((int) baseline - maxAscent);
+                word.setPositionY(y);
+            }
+
             word.incrementXPosition(offsetX);
             displayList.add(word);
         }

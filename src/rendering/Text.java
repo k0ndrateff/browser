@@ -6,11 +6,13 @@ import java.awt.font.LineMetrics;
 public class Text extends RenderingComponent {
     private final Font font;
     private final String text;
+    private final TextRenderingProperty property;
 
-    public Text(String text, Point position, Font font) {
+    public Text(String text, Point position, Font font, TextRenderingProperty property) {
         this.text = text;
         this.position = position;
         this.font = font;
+        this.property = property;
     }
 
     public void paint(Graphics g, PaintingContext ctx) {
@@ -21,6 +23,10 @@ public class Text extends RenderingComponent {
 
     public Font getFont() {
         return font;
+    }
+
+    public TextRenderingProperty getProperty() {
+        return property;
     }
 
     public LineMetrics getFontMetrics() {
