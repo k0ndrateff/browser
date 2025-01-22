@@ -19,11 +19,24 @@ public class Text extends RenderingComponent {
         g.drawString(text, position.x, position.y - ctx.getScrollY());
     }
 
+    public Font getFont() {
+        return font;
+    }
+
     public LineMetrics getFontMetrics() {
         return font.getLineMetrics(text, TextRenderer.FRC);
     }
 
+    public void incrementXPosition(int increment) {
+        position.x += increment;
+    }
+
     public void setPositionY(int positionY) {
         position.y = positionY;
+    }
+
+    @Override
+    public String toString() {
+        return text;
     }
 }

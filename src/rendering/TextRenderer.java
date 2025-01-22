@@ -28,6 +28,7 @@ public class TextRenderer {
     private int cursorY;
     private int fontStyle = Font.PLAIN;
     private int fontSize = 16;
+    private boolean isLineCentered = false;
 
     public TextRenderer(RenderingContext ctx, boolean isRtl) {
         this.ctx = ctx;
@@ -64,7 +65,8 @@ public class TextRenderer {
             case "/small" -> fontSize += 2;
             case "big" -> fontSize += 4;
             case "/big" -> fontSize -= 4;
-            case "br /", "/p" -> flushLineBuffer();
+            case "br /", "/p", "/center", "/h1" -> flushLineBuffer();
+            case "center", "h1 class=\"title\"" -> isLineCentered = true;
             case null, default -> {
             }
         }
@@ -105,6 +107,16 @@ public class TextRenderer {
             return;
         }
 
+        int offsetX = 0;
+
+        if (isLineCentered) {
+            Logger.verbose("Encountered line centered text");
+
+            int lineWidth = measureLineWidth(lineBuffer);
+
+            offsetX = (ctx.getWidth() - lineWidth) / 2;
+        }
+
         Stream<LineMetrics> ascentMetrics = lineBuffer.stream().map(Text::getFontMetrics);
         float maxAscent = Collections.max(ascentMetrics.map(LineMetrics::getAscent).toList());
         float baseline = cursorY + 1.25f * maxAscent;
@@ -112,6 +124,7 @@ public class TextRenderer {
         for (Text word : lineBuffer) {
             int y = (int) ((int) baseline - maxAscent);
             word.setPositionY(y);
+            word.incrementXPosition(offsetX);
             displayList.add(word);
         }
 
@@ -120,7 +133,21 @@ public class TextRenderer {
         cursorY = (int) ((int) baseline + 1.25f * maxDescent);
 
         cursorX = ctx.getBaseTextPosition().x;
+        isLineCentered = false;
         lineBuffer.clear();
+    }
+
+    private static int measureLineWidth(Deque<Text> line) {
+        int width = 0;
+
+        for (Text word : line) {
+            int wordWidth = (int) word.getFont().getStringBounds(word.toString(), FRC).getWidth();
+            int whitespaceWidth = (int) word.getFont().getStringBounds(" ", FRC).getWidth();
+
+            width += wordWidth + whitespaceWidth;
+        }
+
+        return width;
     }
 
     private static boolean containsEmojiOrNewline(String word) {
