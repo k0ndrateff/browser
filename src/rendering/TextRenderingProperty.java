@@ -2,5 +2,6 @@ package rendering;
 
 public enum TextRenderingProperty {
     PLAIN,
-    SUPERSCRIPT
+    SUPERSCRIPT,
+    PREFORMATTED
 }

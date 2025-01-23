@@ -19,6 +19,7 @@ public class TextRenderer {
     public static final FontRenderContext FRC = new FontRenderContext(new AffineTransform(), true, false);
     private static final int DEFAULT_LINE_HEIGHT = 20;
     private static final String DEFAULT_FONT = "SF Pro";
+    private static final String MONOSPACE_FONT = "Courier New";
 
     private final boolean isRtl;
     private final RenderingContext ctx;
@@ -81,6 +82,14 @@ public class TextRenderer {
             }
             case "abbr" -> fontName = DEFAULT_FONT + " SC";
             case "/abbr" -> fontName = DEFAULT_FONT;
+            case "pre" -> {
+                fontName = MONOSPACE_FONT;
+                property = TextRenderingProperty.PREFORMATTED;
+            }
+            case "/pre" -> {
+                fontName = DEFAULT_FONT;
+                property = TextRenderingProperty.PLAIN;
+            }
             case null, default -> {
             }
         }
@@ -108,7 +117,7 @@ public class TextRenderer {
                 cursorX += (wordWidth + whitespaceWidth) * direction;
             }
 
-            if (cursorX + wordWidth >= ctx.getWidth()) {
+            if (cursorX + wordWidth >= ctx.getWidth() && !(property == TextRenderingProperty.PREFORMATTED)) {
                 this.flushLineBuffer();
             }
         }
