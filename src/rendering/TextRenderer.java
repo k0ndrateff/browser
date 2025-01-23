@@ -17,7 +17,8 @@ import java.util.stream.Stream;
 public class TextRenderer {
     public static final String SOFT_HYPHEN_STRING = Character.toString(0x00AD);
     public static final FontRenderContext FRC = new FontRenderContext(new AffineTransform(), true, false);
-    public static final int DEFAULT_LINE_HEIGHT = 20;
+    private static final int DEFAULT_LINE_HEIGHT = 20;
+    private static final String DEFAULT_FONT = "SF Pro";
 
     private final boolean isRtl;
     private final RenderingContext ctx;
@@ -30,6 +31,7 @@ public class TextRenderer {
     private int fontStyle = Font.PLAIN;
     private int fontSize = 16;
     private boolean isLineCentered = false;
+    private String fontName = DEFAULT_FONT;
     private TextRenderingProperty property = TextRenderingProperty.PLAIN;
 
     public TextRenderer(RenderingContext ctx, boolean isRtl) {
@@ -77,13 +79,15 @@ public class TextRenderer {
                 property = TextRenderingProperty.PLAIN;
                 fontSize *= 2;
             }
+            case "abbr" -> fontName = DEFAULT_FONT + " SC";
+            case "/abbr" -> fontName = DEFAULT_FONT;
             case null, default -> {
             }
         }
     }
 
     private void processHtmlText(HtmlText text) {
-        Font font = FontCache.retrieve("SF Pro", fontStyle, fontSize);
+        Font font = FontCache.retrieve(fontName, fontStyle, fontSize);
         int direction = isRtl ? -1 : 1;
 
         for (String tk : splitText(text.toString())) {
