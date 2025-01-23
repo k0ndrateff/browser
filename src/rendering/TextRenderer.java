@@ -15,6 +15,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 public class TextRenderer {
+    public static final String SOFT_HYPHEN_STRING = Character.toString(0x00AD);
     public static final FontRenderContext FRC = new FontRenderContext(new AffineTransform(), true, false);
     public static final int DEFAULT_LINE_HEIGHT = 20;
 
@@ -166,8 +167,8 @@ public class TextRenderer {
         return width;
     }
 
-    private static boolean containsEmojiOrNewline(String word) {
-        return Arrays.stream(splitWord(word)).anyMatch(ch -> Emoji.isEmoji(ch) || Objects.equals(ch, "\n"));
+    private static boolean containsWordBreakingCharacter(String word) {
+        return Arrays.stream(splitWord(word)).anyMatch(ch -> Emoji.isEmoji(ch) || Objects.equals(ch, "\n") || Objects.equals(ch, SOFT_HYPHEN_STRING));
     }
 
     public static ArrayList<String> splitText(String text) {
@@ -176,7 +177,7 @@ public class TextRenderer {
 
         while (matcher.find()) {
             String word = matcher.group();
-            if (containsEmojiOrNewline(word)) {
+            if (containsWordBreakingCharacter(word)) {
                 result.addAll(Arrays.asList(splitWord(word)));
             } else {
                 result.add(word);

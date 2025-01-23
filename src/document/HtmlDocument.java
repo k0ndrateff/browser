@@ -1,6 +1,7 @@
 package document;
 
 import error.Logger;
+import rendering.TextRenderer;
 
 import java.util.ArrayList;
 
@@ -86,6 +87,7 @@ public class HtmlDocument {
             case "quot" -> "\"";
             case "apos" -> "'";
             case "nbsp" -> " ";
+            case "shy" -> TextRenderer.SOFT_HYPHEN_STRING;
             default -> "";
         };
     }
