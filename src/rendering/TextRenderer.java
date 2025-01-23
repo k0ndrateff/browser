@@ -1,7 +1,7 @@
 package rendering;
 
-import document.HtmlLayoutEntity;
-import document.HtmlTag;
+import document.HtmlNode;
+import document.HtmlElement;
 import document.HtmlText;
 import error.Logger;
 
@@ -40,53 +40,71 @@ public class TextRenderer {
         this.isRtl = isRtl;
     }
 
-    public void render(ArrayList<HtmlLayoutEntity> tokens) {
+    public void render(HtmlNode node) {
         Logger.verbose("Rendering text...");
 
         cursorX = ctx.getBaseTextPosition().x;
         cursorY = ctx.getBaseTextPosition().y;
 
-        for (HtmlLayoutEntity token : tokens) {
-            if (token instanceof HtmlTag) {
-                processHtmlTag((HtmlTag) token);
-            }
-            else if (token instanceof HtmlText) {
-                processHtmlText((HtmlText) token);
-            }
-        }
+        this.traverseTree(node);
 
         this.flushLineBuffer();
     }
 
-    private void processHtmlTag(HtmlTag tag) {
+    private void traverseTree(HtmlNode node) {
+        if (node instanceof HtmlElement) {
+            this.processHtmOpenTag((HtmlElement) node);
+
+            for (HtmlNode child : node.getChildren()) {
+                this.traverseTree(child);
+            }
+
+            this.processHtmlCloseTag((HtmlElement) node);
+        }
+        else if (node instanceof HtmlText) {
+            processHtmlText((HtmlText) node);
+        }
+    }
+
+    private void processHtmOpenTag(HtmlElement tag) {
         String tk = tag.toString();
 
 
         switch (tk) {
             case "i" -> fontStyle = Font.ITALIC;
             case "b" -> fontStyle = Font.BOLD;
-            case "/i", "/b" -> fontStyle = Font.PLAIN;
             case "small" -> fontSize -= 2;
-            case "/small" -> fontSize += 2;
             case "big" -> fontSize += 4;
-            case "/big" -> fontSize -= 4;
-            case "br /", "/p", "/center", "/h1" -> flushLineBuffer();
-            case "center", "h1 class=\"title\"" -> isLineCentered = true;
+            case "center", "h1" -> isLineCentered = true;
             case "sup" -> {
                 property = TextRenderingProperty.SUPERSCRIPT;
                 fontSize /= 2;
             }
-            case "/sup" -> {
-                property = TextRenderingProperty.PLAIN;
-                fontSize *= 2;
-            }
             case "abbr" -> fontName = DEFAULT_FONT + " SC";
-            case "/abbr" -> fontName = DEFAULT_FONT;
             case "pre" -> {
                 fontName = MONOSPACE_FONT;
                 property = TextRenderingProperty.PREFORMATTED;
             }
-            case "/pre" -> {
+            case null, default -> {
+            }
+        }
+    }
+
+    private void processHtmlCloseTag(HtmlElement tag) {
+        String tk = tag.toString();
+
+
+        switch (tk) {
+            case "i", "b" -> fontStyle = Font.PLAIN;
+            case "small" -> fontSize += 2;
+            case "big" -> fontSize -= 4;
+            case "br", "p", "center", "h1" -> flushLineBuffer();
+            case "sup" -> {
+                property = TextRenderingProperty.PLAIN;
+                fontSize *= 2;
+            }
+            case "abbr" -> fontName = DEFAULT_FONT;
+            case "pre" -> {
                 fontName = DEFAULT_FONT;
                 property = TextRenderingProperty.PLAIN;
             }

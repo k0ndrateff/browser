@@ -134,7 +134,7 @@ public class HttpCache {
         Instant freshUntil = Instant.now().plusSeconds(maxAge);
         HttpCacheEntry entry = new HttpCacheEntry(url, freshUntil);
         cache.put(url, entry);
-        createContentFile(entry.getUuid(), response.getData().getHtmlString());
+        createContentFile(entry.getUuid(), response.getData().getContent());
         updateCacheDb();
     }
 

@@ -1,13 +1,13 @@
 package rendering;
 
 import document.HtmlDocument;
-import document.HtmlLayoutEntity;
+import document.HtmlNode;
+import document.HtmlParser;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
-import java.util.ArrayList;
 
 public class BrowserWindow extends JFrame implements ComponentListener {
     private static final int WIDTH = 800;
@@ -15,8 +15,8 @@ public class BrowserWindow extends JFrame implements ComponentListener {
 
     private final PageCanvas canvas;
 
-    private HtmlDocument htmlDocument;
-    private ArrayList<HtmlLayoutEntity> entities;
+    private HtmlParser htmlParser;
+    private HtmlNode htmlTreeHead;
     private final RenderingContext renderingContext;
 
     public BrowserWindow() {
@@ -39,8 +39,8 @@ public class BrowserWindow extends JFrame implements ComponentListener {
     }
 
     public void renderHtmlDocument(HtmlDocument document) {
-        this.htmlDocument = document;
-        this.entities = document.getContent();
+        this.htmlParser = new HtmlParser(document);
+        this.htmlTreeHead = htmlParser.parse();
 
         renderingContext.setBaseTextPosition(document.isRtl() ? new Point(canvas.getDrawingWidth() - 40, 20) : new Point(20, 20));
 
@@ -48,8 +48,8 @@ public class BrowserWindow extends JFrame implements ComponentListener {
     }
 
     private void rerenderCurrentDocument() {
-        TextRenderer renderer = new TextRenderer(renderingContext, htmlDocument.isRtl());
-        renderer.render(entities);
+        TextRenderer renderer = new TextRenderer(renderingContext, htmlParser.getDocument().isRtl());
+        renderer.render(htmlTreeHead);
         canvas.setText(renderer);
 
         repaint();
