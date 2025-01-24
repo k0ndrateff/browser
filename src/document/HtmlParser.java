@@ -44,6 +44,12 @@ public class HtmlParser {
 
                     buffer.setLength(0);
                 } else if (c == '>') {
+                    if (buffer.toString().startsWith("!--") && !buffer.toString().endsWith("--")) {
+                        buffer.append(c);
+
+                        continue;
+                    }
+
                     inTag = false;
 
                     this.addElementNode(buffer.toString());
