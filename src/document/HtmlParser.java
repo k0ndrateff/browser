@@ -163,6 +163,9 @@ public class HtmlParser {
             else if (openTags.length == 2 && openTags[0].equals("html") && openTags[1].equals("head") && !headTags.contains(tag)) {
                 this.addElementNode("/head");
             }
+            else if (openTags.length > 0 && openTags[openTags.length - 1].equals("p") && Objects.equals(tag, "p")) {
+                this.addElementNode("/p");
+            }
             else {
                 break;
             }
