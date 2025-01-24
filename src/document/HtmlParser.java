@@ -49,11 +49,12 @@ public class HtmlParser {
 
                         continue;
                     }
+                    else if (!buffer.toString().startsWith("!--")) {
+                        this.addElementNode(buffer.toString());
+                    }
+
 
                     inTag = false;
-
-                    this.addElementNode(buffer.toString());
-
                     buffer.setLength(0);
                 } else if (!inTag) {
                     if (c == '&') {
