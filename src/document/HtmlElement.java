@@ -52,6 +52,13 @@ public class HtmlElement extends HtmlNode {
             }
         }
 
+        if (isReadingAttributes) {
+            attributes.put(attributeName, token.toString());
+        }
+        else {
+            tagName = token.toString().toLowerCase();
+        }
+
         return new HtmlElement(tagName, parent, attributes);
     }
 

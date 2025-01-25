@@ -39,7 +39,7 @@ public class BrowserWindow extends JFrame implements ComponentListener {
     }
 
     public void renderHtmlDocument(HtmlDocument document) {
-        this.htmlParser = new HtmlParser(document);
+        this.htmlParser = HtmlParser.create(document);
         this.htmlTreeHead = htmlParser.parse();
 
         renderingContext.setBaseTextPosition(document.isRtl() ? new Point(canvas.getDrawingWidth() - 40, 20) : new Point(20, 20));

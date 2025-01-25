@@ -53,7 +53,7 @@ public class TextRenderer {
 
     private void traverseTree(HtmlNode node) {
         if (node instanceof HtmlElement) {
-            this.processHtmOpenTag((HtmlElement) node);
+            this.processHtmlOpenTag((HtmlElement) node);
 
             for (HtmlNode child : node.getChildren()) {
                 this.traverseTree(child);
@@ -66,7 +66,7 @@ public class TextRenderer {
         }
     }
 
-    private void processHtmOpenTag(HtmlElement tag) {
+    private void processHtmlOpenTag(HtmlElement tag) {
         String tk = tag.toString();
 
 
@@ -127,7 +127,7 @@ public class TextRenderer {
             else if (Emoji.isEmoji(tk)) {
                 displayList.add(new Emoji(tk, new Point(cursorX, cursorY), fontSize));
 
-                cursorX += 16 * direction;
+                cursorX += fontSize * direction;
             }
             else {
                 lineBuffer.add(new Text(tk, new Point(cursorX, 0), font, property));
@@ -198,30 +198,42 @@ public class TextRenderer {
         return width;
     }
 
-    private static boolean containsWordBreakingCharacter(String word) {
-        return Arrays.stream(splitWord(word)).anyMatch(ch -> Emoji.isEmoji(ch) || Objects.equals(ch, "\n") || Objects.equals(ch, SOFT_HYPHEN_STRING));
-    }
-
     public static ArrayList<String> splitText(String text) {
         ArrayList<String> result = new ArrayList<>();
-        Matcher matcher = Pattern.compile("[\\p{L}\\p{N}\\p{P}]+|\\p{So}+|\\n").matcher(text);
+        String[] words = text.split(" ");
 
-        while (matcher.find()) {
-            String word = matcher.group();
-            if (containsWordBreakingCharacter(word)) {
-                result.addAll(Arrays.asList(splitWord(word)));
-            } else {
-                result.add(word);
-            }
+        for (String word : words) {
+            result.addAll(splitWord(word));
         }
 
         return result;
     }
 
-    private static String[] splitWord(String text) {
-        return text.codePoints()
+    private static ArrayList<String> splitWord(String text) {
+        ArrayList<String> result = new ArrayList<>();
+        StringBuilder builder = new StringBuilder();
+
+        String[] characters = text.codePoints()
                 .mapToObj(java.lang.Character::toString)
                 .toArray(String[]::new);
+
+        for (String character : characters) {
+            if (Objects.equals(character, "\n") || Emoji.isEmoji(character)) {
+                if (!builder.isEmpty()) {
+                    result.add(builder.toString());
+                    builder.setLength(0);
+                }
+
+                result.add(character);
+            }
+            else {
+                builder.append(character);
+            }
+        }
+
+        result.add(builder.toString());
+
+        return result;
     }
 
     public Deque<RenderingComponent> getDisplayList() {

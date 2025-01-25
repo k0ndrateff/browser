@@ -6,15 +6,24 @@ import rendering.TextRenderer;
 import java.util.*;
 
 public class HtmlParser {
-    private static final String[] SELF_CLOSING_TAGS = new String[] { "area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr" };
-    private static final String[] HEAD_TAGS = new String[] { "base", "basefont", "bgsound", "noscript", "link", "meta", "title", "style", "script" };
+    protected static final String[] SELF_CLOSING_TAGS = new String[] { "area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr" };
+    protected static final String[] HEAD_TAGS = new String[] { "base", "basefont", "bgsound", "noscript", "link", "meta", "title", "style", "script" };
 
-    private final HtmlDocument document;
-    private final Stack<HtmlNode> unfinishedNodes;
+    protected final HtmlDocument document;
+    protected final Stack<HtmlNode> unfinishedNodes;
 
     public HtmlParser(HtmlDocument document) {
         this.document = document;
         this.unfinishedNodes = new Stack<>();
+    }
+
+    public static HtmlParser create(HtmlDocument document) {
+        if (document.isViewSource()) {
+            return new SourceHtmlParser(document);
+        }
+        else {
+            return new HtmlParser(document);
+        }
     }
 
     public HtmlDocument getDocument() {
@@ -24,89 +33,84 @@ public class HtmlParser {
     public HtmlNode parse() {
         Logger.verbose("Parsing HTML Tree...");
 
-        if (document.isViewSource()) {
-            return new HtmlText(document.getContent(), null);
-        }
-        else {
-            boolean inTag = false;
-            boolean inQuotedAttribute = false;
-            boolean inEntity = false;
+        boolean inTag = false;
+        boolean inQuotedAttribute = false;
+        boolean inEntity = false;
 
-            StringBuilder buffer = new StringBuilder();
-            StringBuilder htmlEntityBuilder = new StringBuilder();
+        StringBuilder buffer = new StringBuilder();
+        StringBuilder htmlEntityBuilder = new StringBuilder();
 
-            for (char c : document.getContent().toCharArray()) {
-                if (c == '"' && inTag) {
-                    inQuotedAttribute = !inQuotedAttribute;
+        for (char c : document.getContent().toCharArray()) {
+            if (c == '"' && inTag) {
+                inQuotedAttribute = !inQuotedAttribute;
+            }
+
+            if (c == '<') {
+                if (inTag) {
+                    buffer.append(c);
+
+                    continue;
                 }
 
-                if (c == '<') {
-                    if (inTag) {
-                        buffer.append(c);
+                inTag = true;
 
-                        continue;
-                    }
+                if (!buffer.isEmpty()) {
+                    this.addTextNode(buffer.toString());
+                }
 
-                    inTag = true;
+                buffer.setLength(0);
+            } else if (c == '>') {
+                if (inQuotedAttribute) {
+                    buffer.append(c);
 
-                    if (!buffer.isEmpty()) {
-                        this.addTextNode(buffer.toString());
-                    }
+                    continue;
+                }
+                if (buffer.toString().startsWith("!--") && !buffer.toString().endsWith("--")) {
+                    buffer.append(c);
 
-                    buffer.setLength(0);
-                } else if (c == '>') {
-                    if (inQuotedAttribute) {
-                        buffer.append(c);
+                    continue;
+                }
+                else if (buffer.toString().startsWith("script") && !buffer.toString().endsWith("/") && !buffer.toString().endsWith("/script")) {
+                    buffer.append(c);
 
-                        continue;
-                    }
-                    if (buffer.toString().startsWith("!--") && !buffer.toString().endsWith("--")) {
-                        buffer.append(c);
-
-                        continue;
-                    }
-                    else if (buffer.toString().startsWith("script") && !buffer.toString().endsWith("/") && !buffer.toString().endsWith("/script")) {
-                        buffer.append(c);
-
-                        continue;
-                    }
-                    else if (!buffer.toString().startsWith("!--")) {
-                        this.addElementNode(buffer.toString());
-                    }
+                    continue;
+                }
+                else if (!buffer.toString().startsWith("!--")) {
+                    this.addElementNode(buffer.toString());
+                }
 
 
-                    inTag = false;
-                    buffer.setLength(0);
-                } else if (!inTag) {
-                    if (c == '&') {
-                        inEntity = true;
-                    }
-                    else if (c == ';' && inEntity) {
-                        inEntity = false;
-                        buffer.append(resolveEntity(htmlEntityBuilder.toString()));
-                        htmlEntityBuilder.setLength(0);
-                    }
-                    else if (inEntity) {
-                        htmlEntityBuilder.append(c);
-                    }
-                    else {
-                        buffer.append(c);
-                    }
+                inTag = false;
+                buffer.setLength(0);
+            } else if (!inTag) {
+                if (c == '&') {
+                    inEntity = true;
+                }
+                else if (c == ';' && inEntity) {
+                    inEntity = false;
+                    buffer.append(resolveEntity(htmlEntityBuilder.toString()));
+                    htmlEntityBuilder.setLength(0);
+                }
+                else if (inEntity) {
+                    htmlEntityBuilder.append(c);
                 }
                 else {
                     buffer.append(c);
                 }
             }
-
-            if (!buffer.isEmpty() && !inTag) {
-                this.addTextNode(buffer.toString());
+            else {
+                buffer.append(c);
             }
-
-            return this.finishTree();
         }
+
+        if (!buffer.isEmpty() && !inTag) {
+            this.addTextNode(buffer.toString());
+        }
+
+        return this.finishTree();
     }
 
-    private void addTextNode(String text) {
+    protected void addTextNode(String text) {
         if (text.trim().isEmpty()) return;
 
         this.insertImplicitTags(null);
@@ -116,7 +120,7 @@ public class HtmlParser {
         parent.appendChildren(textNode);
     }
 
-    private void addElementNode(String tag) {
+    protected void addElementNode(String tag) {
         if (tag.startsWith("!")) return;
 
         this.insertImplicitTags(tag);
@@ -148,7 +152,7 @@ public class HtmlParser {
         }
     }
 
-    private HtmlNode finishTree() {
+    protected HtmlNode finishTree() {
         if (this.unfinishedNodes.isEmpty()) {
             this.insertImplicitTags(null);
         }
