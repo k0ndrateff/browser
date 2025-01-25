@@ -36,6 +36,12 @@ public class HtmlParser {
 
             for (char c : document.getContent().toCharArray()) {
                 if (c == '<') {
+                    if (inTag) {
+                        buffer.append(c);
+
+                        continue;
+                    }
+
                     inTag = true;
 
                     if (!buffer.isEmpty()) {
@@ -45,6 +51,11 @@ public class HtmlParser {
                     buffer.setLength(0);
                 } else if (c == '>') {
                     if (buffer.toString().startsWith("!--") && !buffer.toString().endsWith("--")) {
+                        buffer.append(c);
+
+                        continue;
+                    }
+                    else if (buffer.toString().startsWith("script") && !buffer.toString().endsWith("/") && !buffer.toString().endsWith("/script")) {
                         buffer.append(c);
 
                         continue;
