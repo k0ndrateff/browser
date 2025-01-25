@@ -14,26 +14,41 @@ public class HtmlElement extends HtmlNode {
     }
 
     public static HtmlElement create(String tag, HtmlNode parent) {
-        String[] parts = tag.split(" ");
-
-        String tagName = parts[0].toLowerCase();
+        String tagName = "";
         HashMap<String, String> attributes = new HashMap<>();
+        StringBuilder token = new StringBuilder();
+        String attributeName = "";
 
-        for (int i = 1; i < parts.length; i++) {
-            String attrPair = parts[i];
+        boolean isReadingAttributes = false;
+        boolean inQuotedAttribute = false;
 
-            if (attrPair.contains("=")) {
-                String[] attrs = attrPair.split("=", 2);
-                String value = attrs[1];
-
-                if (value.contains("'") || value.contains("\"")) {
-                    value = value.substring(1, value.length() - 1);
+        for (char c : tag.toCharArray()) {
+            if (isReadingAttributes) {
+                if (c == '=') {
+                    attributeName = token.toString().toLowerCase();
+                    token.setLength(0);
                 }
-
-                attributes.put(attrs[0].toLowerCase(), value);
+                else if (c == '"') {
+                    inQuotedAttribute = !inQuotedAttribute;
+                }
+                else if (c == ' ' && !inQuotedAttribute) {
+                    attributes.put(attributeName, token.toString());
+                    attributeName = "";
+                    token.setLength(0);
+                }
+                else {
+                    token.append(c);
+                }
             }
             else {
-                attributes.put(attrPair.toLowerCase(), "");
+                if (c == ' ') {
+                    tagName = token.toString().toLowerCase();
+                    token.setLength(0);
+                    isReadingAttributes = true;
+                }
+                else {
+                    token.append(c);
+                }
             }
         }
 

@@ -29,12 +29,17 @@ public class HtmlParser {
         }
         else {
             boolean inTag = false;
+            boolean inQuotedAttribute = false;
             boolean inEntity = false;
 
             StringBuilder buffer = new StringBuilder();
             StringBuilder htmlEntityBuilder = new StringBuilder();
 
             for (char c : document.getContent().toCharArray()) {
+                if (c == '"' && inTag) {
+                    inQuotedAttribute = !inQuotedAttribute;
+                }
+
                 if (c == '<') {
                     if (inTag) {
                         buffer.append(c);
@@ -50,6 +55,11 @@ public class HtmlParser {
 
                     buffer.setLength(0);
                 } else if (c == '>') {
+                    if (inQuotedAttribute) {
+                        buffer.append(c);
+
+                        continue;
+                    }
                     if (buffer.toString().startsWith("!--") && !buffer.toString().endsWith("--")) {
                         buffer.append(c);
 
