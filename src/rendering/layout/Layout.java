@@ -1,10 +1,11 @@
 package rendering.layout;
 
 import document.HtmlNode;
+import rendering.RenderingComponent;
 import rendering.RenderingContext;
-import rendering.TextRenderer;
 
 import java.util.ArrayList;
+import java.util.Deque;
 
 public abstract class Layout {
     protected HtmlNode node;
@@ -14,12 +15,17 @@ public abstract class Layout {
 
     protected RenderingContext ctx;
 
+    protected int x;
+    protected int y;
+    protected int width;
+    protected int height;
+
     protected Layout(HtmlNode node, RenderingContext ctx) {
         this.ctx = ctx;
         this.node = node;
         this.parent = null;
         this.previous = null;
-        this.children = new ArrayList<Layout>();
+        this.children = new ArrayList<>();
     }
 
     public Layout(HtmlNode node, Layout parent, Layout previous, RenderingContext ctx) {
@@ -30,5 +36,14 @@ public abstract class Layout {
         this.children = new ArrayList<>();
     }
 
-    public abstract TextRenderer render();
+    public int getHeight() {
+        return height;
+    }
+
+    public ArrayList<Layout> getChildren() {
+        return children;
+    }
+
+    public abstract Deque<RenderingComponent> getDisplayList();
+    public abstract void render();
 }

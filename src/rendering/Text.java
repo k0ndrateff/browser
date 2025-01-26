@@ -1,5 +1,7 @@
 package rendering;
 
+import rendering.layout.BlockLayout;
+
 import java.awt.*;
 import java.awt.font.LineMetrics;
 
@@ -30,7 +32,7 @@ public class Text extends RenderingComponent {
     }
 
     public LineMetrics getFontMetrics() {
-        return font.getLineMetrics(text, TextRenderer.FRC);
+        return font.getLineMetrics(text, BlockLayout.FRC);
     }
 
     public void incrementXPosition(int increment) {

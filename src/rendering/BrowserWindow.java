@@ -51,8 +51,8 @@ public class BrowserWindow extends JFrame implements ComponentListener {
 
     private void rerenderCurrentDocument() {
         DocumentLayout layout = new DocumentLayout(htmlTreeHead, renderingContext);
-        TextRenderer renderer = layout.render();
-        canvas.setText(renderer);
+        layout.render();
+        canvas.setText(layout);
 
         repaint();
     }

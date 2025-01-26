@@ -1,6 +1,7 @@
 package rendering;
 
 import error.Logger;
+import rendering.layout.Layout;
 
 import javax.swing.*;
 import java.awt.*;
@@ -12,7 +13,7 @@ public class PageCanvas extends JComponent implements KeyListener, MouseWheelLis
 
     JScrollBar scrollBar = new JScrollBar(JScrollBar.VERTICAL);
 
-    TextRenderer renderer;
+    Layout layoutTreeHead;
     PaintingContext paintingContext = new PaintingContext(scrollY);
 
     public PageCanvas() {
@@ -49,20 +50,28 @@ public class PageCanvas extends JComponent implements KeyListener, MouseWheelLis
 
         g.clearRect(0, 0, getDrawingWidth(), getHeight());
 
-        if (renderer != null) {
-            for (RenderingComponent component : renderer.getDisplayList()) {
-                if (component.getPosition().y > scrollY + getHeight()) continue;
-                if (component.getPosition().y + 18 < scrollY) continue;
-
-                component.paint(g, paintingContext);
-            }
+        if (layoutTreeHead != null) {
+            paintTree(g, layoutTreeHead);
         }
     }
 
-    public void setText(TextRenderer displayList) {
-        this.renderer = displayList;
+    private void paintTree(Graphics g, Layout layoutNode) {
+        for (RenderingComponent component : layoutNode.getDisplayList()) {
+            if (component.getPosition().y > scrollY + getHeight()) continue;
+            if (component.getPosition().y + 18 < scrollY) continue;
 
-        if (displayList.getLastDisplayListEntryY() > getHeight()) {
+            component.paint(g, paintingContext);
+        }
+
+        for (Layout child : layoutNode.getChildren()) {
+            paintTree(g, child);
+        }
+    }
+
+    public void setText(Layout layoutTreeHead) {
+        this.layoutTreeHead = layoutTreeHead;
+
+        if (layoutTreeHead.getHeight() > this.getHeight()) {
             scrollBar.setMaximum(getMaxScrollY());
         }
         else {
@@ -73,7 +82,7 @@ public class PageCanvas extends JComponent implements KeyListener, MouseWheelLis
     }
 
     private int getMaxScrollY() {
-        return renderer.getLastDisplayListEntryY() - getHeight() + 20;
+        return layoutTreeHead.getHeight() - this.getHeight() + 20;
     }
 
     @Override

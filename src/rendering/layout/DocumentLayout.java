@@ -1,8 +1,11 @@
 package rendering.layout;
 
 import document.HtmlNode;
+import rendering.RenderingComponent;
 import rendering.RenderingContext;
-import rendering.TextRenderer;
+
+import java.util.ArrayDeque;
+import java.util.Deque;
 
 public class DocumentLayout extends Layout {
     public DocumentLayout(HtmlNode node, RenderingContext ctx) {
@@ -10,9 +13,20 @@ public class DocumentLayout extends Layout {
     }
 
     @Override
-    public TextRenderer render() {
+    public void render() {
+        this.x = ctx.getPosition().x;
+        this.y = ctx.getPosition().y;
+        this.width = ctx.getWidth() - 2 * this.x;
+
         Layout child = new BlockLayout(this.node, this, null, ctx);
         this.children.add(child);
-        return child.render();
+        child.render();
+
+        this.height = child.height;
+    }
+
+    @Override
+    public Deque<RenderingComponent> getDisplayList() {
+        return new ArrayDeque<>();
     }
 }

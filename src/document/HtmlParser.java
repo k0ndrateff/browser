@@ -1,7 +1,7 @@
 package document;
 
 import error.Logger;
-import rendering.TextRenderer;
+import rendering.layout.BlockLayout;
 
 import java.util.*;
 
@@ -207,7 +207,7 @@ public class HtmlParser {
             case "quot" -> "\"";
             case "apos" -> "'";
             case "nbsp" -> " ";
-            case "shy" -> TextRenderer.SOFT_HYPHEN_STRING;
+            case "shy" -> BlockLayout.SOFT_HYPHEN_STRING;
             default -> "";
         };
     }
