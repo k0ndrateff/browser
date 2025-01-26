@@ -5,6 +5,10 @@ import document.HtmlNode;
 import document.HtmlText;
 import error.Logger;
 import rendering.*;
+import rendering.component.Emoji;
+import rendering.component.Rectangle;
+import rendering.component.RenderingComponent;
+import rendering.component.Text;
 
 import java.awt.*;
 import java.awt.font.FontRenderContext;
@@ -140,6 +144,7 @@ public class BlockLayout extends Layout {
             case "pre" -> {
                 fontName = MONOSPACE_FONT;
                 property = TextRenderingProperty.PREFORMATTED;
+                displayList.add(new Rectangle(new Point(this.x, this.y), this.width, this.height, Color.GRAY));
             }
             case null, default -> {
             }

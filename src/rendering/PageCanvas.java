@@ -1,6 +1,7 @@
 package rendering;
 
 import error.Logger;
+import rendering.component.RenderingComponent;
 import rendering.layout.Layout;
 
 import javax.swing.*;

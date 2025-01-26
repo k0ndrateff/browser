@@ -1,5 +1,7 @@
-package rendering;
+package rendering.component;
 
+import rendering.PaintingContext;
+import rendering.TextRenderingProperty;
 import rendering.layout.BlockLayout;
 
 import java.awt.*;

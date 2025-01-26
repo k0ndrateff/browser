@@ -1,7 +1,7 @@
 package rendering.layout;
 
 import document.HtmlNode;
-import rendering.RenderingComponent;
+import rendering.component.RenderingComponent;
 import rendering.RenderingContext;
 
 import java.util.ArrayDeque;

@@ -1,6 +1,7 @@
-package rendering;
+package rendering.component;
 
 import error.Logger;
+import rendering.PaintingContext;
 
 import javax.imageio.ImageIO;
 import java.awt.*;

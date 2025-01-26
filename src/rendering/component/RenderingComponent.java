@@ -1,4 +1,6 @@
-package rendering;
+package rendering.component;
+
+import rendering.PaintingContext;
 
 import javax.swing.*;
 import java.awt.*;
