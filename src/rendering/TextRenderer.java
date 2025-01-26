@@ -10,8 +10,6 @@ import java.awt.font.FontRenderContext;
 import java.awt.font.LineMetrics;
 import java.awt.geom.AffineTransform;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 public class TextRenderer {
@@ -21,7 +19,6 @@ public class TextRenderer {
     private static final String DEFAULT_FONT = "SF Pro";
     private static final String MONOSPACE_FONT = "Courier New";
 
-    private final boolean isRtl;
     private final RenderingContext ctx;
 
     private final Deque<RenderingComponent> displayList = new ArrayDeque<>();
@@ -35,16 +32,15 @@ public class TextRenderer {
     private String fontName = DEFAULT_FONT;
     private TextRenderingProperty property = TextRenderingProperty.PLAIN;
 
-    public TextRenderer(RenderingContext ctx, boolean isRtl) {
+    public TextRenderer(RenderingContext ctx) {
         this.ctx = ctx;
-        this.isRtl = isRtl;
     }
 
     public void render(HtmlNode node) {
         Logger.verbose("Rendering text...");
 
-        cursorX = ctx.getBaseTextPosition().x;
-        cursorY = ctx.getBaseTextPosition().y;
+        cursorX = ctx.getPosition().x;
+        cursorY = ctx.getPosition().y;
 
         this.traverseTree(node);
 
@@ -115,7 +111,7 @@ public class TextRenderer {
 
     private void processHtmlText(HtmlText text) {
         Font font = FontCache.retrieve(fontName, fontStyle, fontSize);
-        int direction = isRtl ? -1 : 1;
+        int direction = ctx.isRtl() ? -1 : 1;
 
         for (String tk : splitText(text.toString())) {
             int wordWidth = (int) font.getStringBounds(tk, FRC).getWidth();
@@ -180,7 +176,7 @@ public class TextRenderer {
         float maxDescent = Collections.max(descentMetrics.map(LineMetrics::getDescent).toList());
         cursorY = (int) ((int) baseline + 1.25f * maxDescent);
 
-        cursorX = ctx.getBaseTextPosition().x;
+        cursorX = ctx.getPosition().x;
         isLineCentered = false;
         lineBuffer.clear();
     }

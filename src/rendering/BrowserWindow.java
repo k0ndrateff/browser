@@ -3,6 +3,7 @@ package rendering;
 import document.HtmlDocument;
 import document.HtmlNode;
 import document.HtmlParser;
+import rendering.layout.DocumentLayout;
 
 import javax.swing.*;
 import java.awt.*;
@@ -42,14 +43,15 @@ public class BrowserWindow extends JFrame implements ComponentListener {
         this.htmlParser = HtmlParser.create(document);
         this.htmlTreeHead = htmlParser.parse();
 
-        renderingContext.setBaseTextPosition(document.isRtl() ? new Point(canvas.getDrawingWidth() - 40, 20) : new Point(20, 20));
+        renderingContext.setPosition(document.isRtl() ? new Point(canvas.getDrawingWidth() - 40, 20) : new Point(20, 20));
+        renderingContext.setIsRtl(document.isRtl());
 
         rerenderCurrentDocument();
     }
 
     private void rerenderCurrentDocument() {
-        TextRenderer renderer = new TextRenderer(renderingContext, htmlParser.getDocument().isRtl());
-        renderer.render(htmlTreeHead);
+        DocumentLayout layout = new DocumentLayout(htmlTreeHead, renderingContext);
+        TextRenderer renderer = layout.render();
         canvas.setText(renderer);
 
         repaint();
