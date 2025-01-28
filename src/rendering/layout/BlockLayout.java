@@ -92,7 +92,7 @@ public class BlockLayout extends Layout {
             Logger.verbose("Rendering inline text...");
 
             cursorX = this.x;
-            cursorY = this.y;
+            cursorY = 0;
 
             this.traverseTree(node);
 
@@ -109,6 +109,8 @@ public class BlockLayout extends Layout {
         else {
             this.height = this.cursorY;
         }
+
+        Logger.verbose("Rendering " + this.node.toString() + " into " + this.width + " x " + this.height);
     }
 
     private void traverseTree(HtmlNode node) {

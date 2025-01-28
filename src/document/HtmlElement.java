@@ -62,6 +62,10 @@ public class HtmlElement extends HtmlNode {
         return new HtmlElement(tagName, parent, attributes);
     }
 
+    public static String getTagName(String tag) {
+        return tag.split(" ", 2)[0];
+    }
+
     public HashMap<String, String> getAttributes() {
         return attributes;
     }

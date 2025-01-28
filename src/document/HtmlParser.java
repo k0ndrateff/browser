@@ -59,7 +59,8 @@ public class HtmlParser {
                 }
 
                 buffer.setLength(0);
-            } else if (c == '>') {
+            }
+            else if (c == '>') {
                 if (inQuotedAttribute) {
                     buffer.append(c);
 
@@ -82,7 +83,8 @@ public class HtmlParser {
 
                 inTag = false;
                 buffer.setLength(0);
-            } else if (!inTag) {
+            }
+            else if (!inTag) {
                 if (c == '&') {
                     inEntity = true;
                 }
@@ -123,16 +125,18 @@ public class HtmlParser {
     protected void addElementNode(String tag) {
         if (tag.startsWith("!")) return;
 
-        this.insertImplicitTags(tag);
+        String tagName = HtmlElement.getTagName(tag);
 
-        if (tag.startsWith("/")) {
+        this.insertImplicitTags(tagName);
+
+        if (tagName.startsWith("/")) {
             if (this.unfinishedNodes.size() == 1) return;
 
             HtmlNode elementNode = this.unfinishedNodes.pop();
             HtmlNode parent = this.unfinishedNodes.peek();
             parent.appendChildren(elementNode);
         }
-        else if (Arrays.asList(SELF_CLOSING_TAGS).contains(tag)) {
+        else if (Arrays.asList(SELF_CLOSING_TAGS).contains(tagName)) {
             HtmlNode parent = this.unfinishedNodes.peek();
             HtmlNode elementNode = HtmlElement.create(tag, parent);
             parent.appendChildren(elementNode);
