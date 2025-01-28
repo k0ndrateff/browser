@@ -124,6 +124,9 @@ public class BlockLayout extends Layout {
         else if (this.node instanceof HtmlElement && Objects.equals(this.node.toString(), "nav")) {
             displayList.add(new Rectangle(new Point(this.x, this.y), this.width, this.height, Color.LIGHT_GRAY));
         }
+        else if (this.node instanceof HtmlElement && Objects.equals(this.node.toString(), "li")) {
+            displayList.add(new Rectangle(new Point(this.x + fontSize, this.y + 8), 3, 3, Color.BLACK));
+        }
     }
 
     private void traverseTree(HtmlNode node) {
@@ -160,6 +163,7 @@ public class BlockLayout extends Layout {
                 fontName = MONOSPACE_FONT;
                 property = TextRenderingProperty.PREFORMATTED;
             }
+            case "li" -> cursorX += 2 * fontSize;
             case null, default -> {
             }
         }
@@ -183,6 +187,7 @@ public class BlockLayout extends Layout {
                 fontName = DEFAULT_FONT;
                 property = TextRenderingProperty.PLAIN;
             }
+            case "li" -> cursorX -= 2 * fontSize;
             case null, default -> {
             }
         }
