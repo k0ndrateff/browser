@@ -83,6 +83,8 @@ public class BlockLayout extends Layout {
             Layout previous = null;
 
             for (HtmlNode child : node.getChildren()) {
+                if (Objects.equals(child.toString(), "head")) continue;
+
                 Layout next = new BlockLayout(child, this, previous, ctx);
                 children.add(next);
                 previous = next;
@@ -198,7 +200,7 @@ public class BlockLayout extends Layout {
                 this.flushLineBuffer();
             }
             else if (Emoji.isEmoji(tk)) {
-                displayList.add(new Emoji(tk, new Point(cursorX, cursorY), fontSize));
+                displayList.add(new Emoji(tk, new Point(cursorX, this.y), fontSize));
 
                 cursorX += fontSize * direction;
             }

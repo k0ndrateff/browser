@@ -75,8 +75,8 @@ public class Emoji extends RenderingComponent {
             try {
                 BufferedImage img = ImageIO.read(file);
 
-                // TODO: somehow calculate magic number 12, which is emoji image offset
-                g.drawImage(img, position.x, position.y - ctx.getScrollY() - 12, size, size, null);
+                // TODO: emoji is aligned incorrectly, need to deal with this somehow
+                g.drawImage(img, position.x, position.y - ctx.getScrollY(), size, size, null);
             } catch (IOException e) {
                 Logger.error(e);
                 g.drawString(String.valueOf(emoji), position.x, position.y - ctx.getScrollY());
