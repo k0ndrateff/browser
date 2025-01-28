@@ -14,6 +14,8 @@ public class Rectangle extends RenderingComponent {
         this.width = width;
         this.height = height;
         this.color = color;
+
+        this.layer = 0;
     }
 
     @Override

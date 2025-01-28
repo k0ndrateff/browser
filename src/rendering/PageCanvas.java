@@ -57,15 +57,21 @@ public class PageCanvas extends JComponent implements KeyListener, MouseWheelLis
     }
 
     private void paintTree(Graphics g, Layout layoutNode) {
+        this.paintTreeLayer(g, layoutNode, 0);
+        this.paintTreeLayer(g, layoutNode, 1);
+    }
+
+    private void paintTreeLayer(Graphics g, Layout layoutNode, int layer) {
         for (RenderingComponent component : layoutNode.getDisplayList()) {
             if (component.getPosition().y > scrollY + getHeight()) continue;
             if (component.getPosition().y + 18 < scrollY) continue;
+            if (component.getLayer() != layer) continue;
 
             component.paint(g, paintingContext);
         }
 
         for (Layout child : layoutNode.getChildren()) {
-            paintTree(g, child);
+            paintTreeLayer(g, child, layer);
         }
     }
 
@@ -97,6 +103,8 @@ public class PageCanvas extends JComponent implements KeyListener, MouseWheelLis
     }
 
     private void handleKeyEvent(KeyEvent e) {
+        if (layoutTreeHead.getHeight() <= this.getHeight()) return;
+
         if (e.getKeyCode() == KeyEvent.VK_DOWN) {
             this.scrollY += SCROLL_SPEED;
 
@@ -119,6 +127,8 @@ public class PageCanvas extends JComponent implements KeyListener, MouseWheelLis
 
     @Override
     public void mouseWheelMoved(MouseWheelEvent e) {
+        if (layoutTreeHead.getHeight() <= this.getHeight()) return;
+
         scrollY += e.getWheelRotation() * SCROLL_SPEED;
 
         if (scrollY < 0) scrollY = 0;

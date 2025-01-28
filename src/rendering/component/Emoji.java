@@ -21,6 +21,8 @@ public class Emoji extends RenderingComponent {
         this.emoji = emoji;
         this.position = position;
         this.size = size;
+
+        this.layer = 1;
     }
 
     public static boolean isEmoji(String ch) {

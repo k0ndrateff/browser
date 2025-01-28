@@ -17,6 +17,8 @@ public class Text extends RenderingComponent {
         this.position = position;
         this.font = font;
         this.property = property;
+
+        this.layer = 1;
     }
 
     public void paint(Graphics g, PaintingContext ctx) {
