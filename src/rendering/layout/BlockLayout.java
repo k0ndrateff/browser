@@ -117,7 +117,10 @@ public class BlockLayout extends Layout {
 
     private void postRenderingProcessing() {
         if (this.node instanceof HtmlElement && Objects.equals(this.node.toString(), "pre")) {
-            displayList.add(new Rectangle(new Point(this.x, this.y - 12), this.width, this.height, Color.GRAY));
+            displayList.add(new Rectangle(new Point(this.x, this.y), this.width, this.height, Color.GRAY));
+        }
+        else if (this.node instanceof HtmlElement && Objects.equals(this.node.toString(), "nav")) {
+            displayList.add(new Rectangle(new Point(this.x, this.y), this.width, this.height, Color.LIGHT_GRAY));
         }
     }
 

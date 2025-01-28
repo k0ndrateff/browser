@@ -1,6 +1,7 @@
 package rendering;
 
 import error.Logger;
+import rendering.component.Rectangle;
 import rendering.component.RenderingComponent;
 import rendering.layout.Layout;
 
@@ -64,7 +65,7 @@ public class PageCanvas extends JComponent implements KeyListener, MouseWheelLis
     private void paintTreeLayer(Graphics g, Layout layoutNode, int layer) {
         for (RenderingComponent component : layoutNode.getDisplayList()) {
             if (component.getPosition().y > scrollY + getHeight()) continue;
-            if (component.getPosition().y + 18 < scrollY) continue;
+            if (!(component instanceof Rectangle) && component.getPosition().y + 18 < scrollY) continue;
             if (component.getLayer() != layer) continue;
 
             component.paint(g, paintingContext);

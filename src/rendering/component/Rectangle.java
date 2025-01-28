@@ -21,6 +21,6 @@ public class Rectangle extends RenderingComponent {
     @Override
     public void paint(Graphics g, PaintingContext ctx) {
         g.setColor(color);
-        g.fillRect(position.x, position.y, width, height);
+        g.fillRect(position.x, position.y - ctx.getScrollY() - 12, width, height);
     }
 }
