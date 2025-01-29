@@ -119,13 +119,7 @@ public class BlockLayout extends Layout {
     }
 
     private void postRenderingProcessing() {
-        if (this.node instanceof HtmlElement && Objects.equals(this.node.toString(), "pre")) {
-            displayList.add(new Rectangle(new Point(this.x, this.y), this.width, this.height, Color.GRAY));
-        }
-        else if (this.node instanceof HtmlElement && Objects.equals(this.node.toString(), "nav")) {
-            displayList.add(new Rectangle(new Point(this.x, this.y), this.width, this.height, Color.LIGHT_GRAY));
-        }
-        else if (this.node instanceof HtmlElement && Objects.equals(this.node.toString(), "li")) {
+        if (this.node instanceof HtmlElement && Objects.equals(this.node.toString(), "li")) {
             displayList.add(new Rectangle(new Point(this.x + fontSize, this.y + 8), 3, 3, Color.BLACK));
         }
 

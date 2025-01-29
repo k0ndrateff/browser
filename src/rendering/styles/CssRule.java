@@ -1,10 +1,10 @@
 package rendering.styles;
 
-public class CssPropertyValue {
+public class CssRule {
     private final String property;
     private final String value;
 
-    public CssPropertyValue(String property, String value) {
+    public CssRule(String property, String value) {
         this.property = property.toLowerCase();
         this.value = value;
     }

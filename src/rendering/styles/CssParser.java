@@ -1,5 +1,6 @@
 package rendering.styles;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -48,28 +49,28 @@ public class CssParser {
         pointer++;
     }
 
-    private CssPropertyValue pair() {
+    private CssRule pair() {
         String property = word();
         whitespace();
         literal(':');
         whitespace();
         String value = word();
-        return new CssPropertyValue(property, value);
+        return new CssRule(property, value);
     }
 
-    public Map<String, CssPropertyValue> parse() {
-        Map<String, CssPropertyValue> pairs = new HashMap<>();
+    public Map<String, CssRule> body() {
+        Map<String, CssRule> pairs = new HashMap<>();
 
-        while (pointer < css.length()) {
+        while (pointer < css.length() && css.charAt(pointer) != '}') {
             try {
-                CssPropertyValue value = pair();
+                CssRule value = pair();
                 pairs.put(value.getProperty(), value);
                 whitespace();
                 literal(';');
                 whitespace();
             }
             catch (Exception e) {
-                Character why = ignoreUntil(new Character[] { ';' });
+                Character why = ignoreUntil(new Character[] { ';', '}' });
 
                 if (why != null && why == ';') {
                     literal(';');
@@ -95,5 +96,48 @@ public class CssParser {
         }
 
         return null;
+    }
+
+    private Selector selector() {
+        Selector out = new TagSelector(word().toLowerCase());
+        whitespace();
+
+        while (pointer < css.length() && css.charAt(pointer) != '{') {
+            String tag = word();
+            Selector descendant = new TagSelector(tag.toLowerCase());
+            out = new DescendantSelector(out, descendant);
+            whitespace();
+        }
+
+        return out;
+    }
+
+    public ArrayList<CssBlock> parse() {
+        ArrayList<CssBlock> blocks = new ArrayList<>();
+
+        while (pointer < css.length()) {
+            try {
+                whitespace();
+                Selector selector = selector();
+                literal('{');
+                whitespace();
+                Map<String, CssRule> pairs = body();
+                literal('}');
+                blocks.add(new CssBlock(selector, pairs));
+            }
+            catch (Exception e) {
+                Character why = ignoreUntil(new Character[] { '}' });
+
+                if (why != null && why == '}') {
+                    literal('}');
+                    whitespace();
+                }
+                else {
+                    break;
+                }
+            }
+        }
+
+        return blocks;
     }
 }

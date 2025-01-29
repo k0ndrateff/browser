@@ -2,14 +2,25 @@ package core;
 
 import document.HtmlDocument;
 import error.Logger;
+import error.NotImplementedException;
 import networking.request.Request;
 import networking.URL;
 import networking.request.http.HttpCache;
+import networking.response.FileResponse;
 import rendering.BrowserWindow;
+import rendering.styles.CssBlock;
+import rendering.styles.CssParser;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 public class Browser {
+    public static final ArrayList<CssBlock> BROWSER_STYLE_SHEET = getBrowserStyleSheet();
+
     public static void main(String[] args) {
         HttpCache.init();
         BrowserWindow window = new BrowserWindow();
@@ -43,5 +54,20 @@ public class Browser {
         }
 
         window.renderHtmlDocument(response);
+    }
+
+    private static ArrayList<CssBlock> getBrowserStyleSheet() {
+        File file = new File("./resources/browser.css");
+        StringBuilder result = new StringBuilder();
+
+        try (FileInputStream fis = new FileInputStream(file)) {
+            result.append(new String(fis.readAllBytes(), StandardCharsets.UTF_8));
+        }
+        catch (IOException e) {
+            Logger.error(e);
+            throw new RuntimeException("Unable to read browser.css file", e);
+        }
+
+        return new CssParser(result.toString()).parse();
     }
 }

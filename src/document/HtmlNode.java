@@ -19,5 +19,9 @@ public abstract class HtmlNode {
         return children;
     }
 
+    public HtmlNode getParent() {
+        return parent;
+    }
+
     public abstract String toString();
 }

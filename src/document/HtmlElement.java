@@ -1,8 +1,10 @@
 package document;
 
+import rendering.styles.CssBlock;
 import rendering.styles.CssParser;
-import rendering.styles.CssPropertyValue;
+import rendering.styles.CssRule;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -10,7 +12,7 @@ public class HtmlElement extends HtmlNode {
     private final String name;
     private final HashMap<String, String> attributes;
 
-    private Map<String, CssPropertyValue> style;
+    private Map<String, CssRule> style;
 
     public HtmlElement(String name, HtmlNode parent, HashMap<String, String> attributes) {
         super(parent);
@@ -76,23 +78,31 @@ public class HtmlElement extends HtmlNode {
         return attributes;
     }
 
-    public void calculateStyle() {
-        Map<String, CssPropertyValue> style = new HashMap<>();
+    public void calculateStyle(ArrayList<CssBlock> rules) {
+        Map<String, CssRule> style = new HashMap<>();
+
+        for (CssBlock cssBlock : rules) {
+            if (!cssBlock.getSelector().matches(this)) continue;
+
+            for (CssRule rule : cssBlock.getRules().values()) {
+                style.put(rule.getProperty(), rule);
+            }
+        }
 
         if (this.getAttributes().containsKey("style")) {
-            style = new CssParser(this.getAttributes().get("style")).parse();
+            style = new CssParser(this.getAttributes().get("style")).body();
         }
 
         this.style = style;
 
         for (HtmlNode child : this.getChildren()) {
             if (child instanceof HtmlElement) {
-                ((HtmlElement) child).calculateStyle();
+                ((HtmlElement) child).calculateStyle(rules);
             }
         }
     }
 
-    public Map<String, CssPropertyValue> getStyle() {
+    public Map<String, CssRule> getStyle() {
         return style;
     }
 

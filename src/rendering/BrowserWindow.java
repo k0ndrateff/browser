@@ -1,5 +1,6 @@
 package rendering;
 
+import core.Browser;
 import document.HtmlDocument;
 import document.HtmlElement;
 import document.HtmlNode;
@@ -52,7 +53,7 @@ public class BrowserWindow extends JFrame implements ComponentListener {
 
     private void rerenderCurrentDocument() {
         if (htmlTreeHead instanceof HtmlElement) {
-            ((HtmlElement) htmlTreeHead).calculateStyle();
+            ((HtmlElement) htmlTreeHead).calculateStyle(Browser.BROWSER_STYLE_SHEET);
         }
 
         DocumentLayout layout = new DocumentLayout(htmlTreeHead, renderingContext);
