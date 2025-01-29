@@ -1,6 +1,7 @@
 package rendering;
 
 import document.HtmlDocument;
+import document.HtmlElement;
 import document.HtmlNode;
 import document.HtmlParser;
 import rendering.layout.DocumentLayout;
@@ -50,6 +51,10 @@ public class BrowserWindow extends JFrame implements ComponentListener {
     }
 
     private void rerenderCurrentDocument() {
+        if (htmlTreeHead instanceof HtmlElement) {
+            ((HtmlElement) htmlTreeHead).calculateStyle();
+        }
+
         DocumentLayout layout = new DocumentLayout(htmlTreeHead, renderingContext);
         layout.render();
         canvas.setText(layout);

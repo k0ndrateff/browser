@@ -9,6 +9,7 @@ import rendering.component.Emoji;
 import rendering.component.Rectangle;
 import rendering.component.RenderingComponent;
 import rendering.component.Text;
+import rendering.styles.CssColor;
 
 import java.awt.*;
 import java.awt.font.FontRenderContext;
@@ -126,6 +127,14 @@ public class BlockLayout extends Layout {
         }
         else if (this.node instanceof HtmlElement && Objects.equals(this.node.toString(), "li")) {
             displayList.add(new Rectangle(new Point(this.x + fontSize, this.y + 8), 3, 3, Color.BLACK));
+        }
+
+        if (this.node instanceof HtmlElement && ((HtmlElement) this.node).getStyle().containsKey("background-color")) {
+            CssColor bgColor = new CssColor(((HtmlElement) this.node).getStyle().get("background-color").getValue().toUpperCase());
+
+            if (bgColor.isDisplayable()) {
+                displayList.add(new Rectangle(new Point(this.x, this.y), this.width, this.height, bgColor.getColor()));
+            }
         }
     }
 

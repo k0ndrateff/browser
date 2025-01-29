@@ -1,10 +1,16 @@
 package document;
 
+import rendering.styles.CssParser;
+import rendering.styles.CssPropertyValue;
+
 import java.util.HashMap;
+import java.util.Map;
 
 public class HtmlElement extends HtmlNode {
     private final String name;
     private final HashMap<String, String> attributes;
+
+    private Map<String, CssPropertyValue> style;
 
     public HtmlElement(String name, HtmlNode parent, HashMap<String, String> attributes) {
         super(parent);
@@ -68,6 +74,26 @@ public class HtmlElement extends HtmlNode {
 
     public HashMap<String, String> getAttributes() {
         return attributes;
+    }
+
+    public void calculateStyle() {
+        Map<String, CssPropertyValue> style = new HashMap<>();
+
+        if (this.getAttributes().containsKey("style")) {
+            style = new CssParser(this.getAttributes().get("style")).parse();
+        }
+
+        this.style = style;
+
+        for (HtmlNode child : this.getChildren()) {
+            if (child instanceof HtmlElement) {
+                ((HtmlElement) child).calculateStyle();
+            }
+        }
+    }
+
+    public Map<String, CssPropertyValue> getStyle() {
+        return style;
     }
 
     public String toString() {
