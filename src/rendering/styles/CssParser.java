@@ -29,6 +29,8 @@ public class CssParser {
         while (pointer < css.length()) {
             if (css.charAt(pointer) == '"') {
                 inQuoted = !inQuoted;
+                pointer++;
+                continue;
             }
 
             if (inQuoted || Character.isAlphabetic(css.charAt(pointer)) || Character.isDigit(css.charAt(pointer)) || Arrays.asList(SPECIAL_CHARACTERS).contains(css.charAt(pointer))) {
@@ -104,12 +106,31 @@ public class CssParser {
     }
 
     private Selector selector() {
-        Selector out = new TagSelector(word().toLowerCase());
+        String selector = word().toLowerCase();
+
+        Selector out;
+
+        if (selector.startsWith(".")) {
+            out = new ClassSelector(selector.substring(1));
+        }
+        else {
+            out = new TagSelector(selector);
+        }
+
         whitespace();
 
         while (pointer < css.length() && css.charAt(pointer) != '{') {
-            String tag = word();
-            Selector descendant = new TagSelector(tag.toLowerCase());
+            selector = word().toLowerCase();
+
+            Selector descendant;
+
+            if (selector.startsWith(".")) {
+                descendant = new ClassSelector(selector.substring(1));
+            }
+            else {
+                descendant = new TagSelector(selector);
+            }
+
             out = new DescendantSelector(out, descendant);
             whitespace();
         }
