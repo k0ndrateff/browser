@@ -61,27 +61,33 @@ public class URL {
             String dir;
 
             List<String> dirPartsList = Arrays.asList(this.path.split("/"));
-            String[] dirParts = dirPartsList.subList(0, dirPartsList.size() - 1).toArray(new String[] {});
-            StringBuilder dirBuilder = new StringBuilder();
-            for (String dirPart : dirParts) {
-                dirBuilder.append(dirPart).append("/");
+
+            if (dirPartsList.isEmpty()) {
+                dir = this.path;
             }
+            else {
+                String[] dirParts = dirPartsList.subList(0, dirPartsList.size() - 1).toArray(new String[] {});
+                StringBuilder dirBuilder = new StringBuilder();
+                for (String dirPart : dirParts) {
+                    dirBuilder.append(dirPart).append("/");
+                }
 
-            dir = dirBuilder.toString();
+                dir = dirBuilder.toString();
 
-            while (url.startsWith("../")) {
-                String[] parts = url.split("/", 2);
-                url = parts[1];
+                while (url.startsWith("../")) {
+                    String[] parts = url.split("/", 2);
+                    url = parts[1];
 
-                if (dir.contains("/")) {
-                    dirPartsList = Arrays.asList(dir.split("/"));
-                    dirParts = dirPartsList.subList(0, dirPartsList.size() - 1).toArray(new String[] {});
-                    dirBuilder = new StringBuilder();
-                    for (String dirPart : dirParts) {
-                        dirBuilder.append(dirPart).append("/");
+                    if (dir.contains("/")) {
+                        dirPartsList = Arrays.asList(dir.split("/"));
+                        dirParts = dirPartsList.subList(0, dirPartsList.size() - 1).toArray(new String[] {});
+                        dirBuilder = new StringBuilder();
+                        for (String dirPart : dirParts) {
+                            dirBuilder.append(dirPart).append("/");
+                        }
+
+                        dir = dirBuilder.toString();
                     }
-
-                    dir = dirBuilder.toString();
                 }
             }
 

@@ -24,7 +24,7 @@ public class SocketPool {
     public static Socket getSocket(String host, int port) throws IOException {
         String key = getKey(host, port);
 
-        if (!socketPool.containsKey(key)) {
+        if (!socketPool.containsKey(key) || (socketPool.containsKey(key) && socketPool.get(key).isClosed())) {
             Logger.verbose("Open socket not found for " + host + ":" + port + ", creating new one...");
 
             Socket socket = new Socket(host, port);
@@ -44,7 +44,7 @@ public class SocketPool {
     public static SSLSocket getSslSocket(String host, int port) throws IOException {
         String key = getKey(host, port);
 
-        if (!sslSocketPool.containsKey(key)) {
+        if (!sslSocketPool.containsKey(key) || (sslSocketPool.containsKey(key) && sslSocketPool.get(key).isClosed())) {
             Logger.verbose("Open SSL socket not found for " + host + ":" + port + ", creating new one...");
 
             SSLSocket socket = (SSLSocket) sslSocketFactory.createSocket(host, port);

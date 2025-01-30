@@ -104,8 +104,8 @@ public class HtmlElement extends HtmlNode {
 
         this.style = style;
 
-        if (style.containsKey("font-size") && style.get("font-size").getValue().endsWith("%")) {
-            String parentFontSize = "";
+        if (style.containsKey("font-size") && style.get("font-size") != null && style.get("font-size").getValue().endsWith("%")) {
+            String parentFontSize;
 
             if (this.parent != null && this.parent instanceof HtmlElement) {
                 parentFontSize = ((HtmlElement) this.parent).getStyle().get("font-size").getValue();

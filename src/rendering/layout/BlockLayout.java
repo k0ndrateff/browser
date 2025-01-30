@@ -41,6 +41,7 @@ public class BlockLayout extends Layout {
     private int cursorY;
     private int fontStyle = Font.PLAIN;
     private int fontSize = 16;
+    private Color textColor = Color.BLACK;
     private boolean isLineCentered = false;
     private String fontName = DEFAULT_FONT;
     private TextRenderingProperty property = TextRenderingProperty.PLAIN;
@@ -150,17 +151,39 @@ public class BlockLayout extends Layout {
     private void processHtmlOpenTag(HtmlElement tag) {
         String tk = tag.toString();
 
+        if (tag.getStyle().containsKey("font-weight") && tag.getStyle().get("font-weight") != null) {
+            if (tag.getStyle().get("font-weight").getValue().equals("bold")) {
+                fontStyle = Font.BOLD;
+            }
+            else {
+                fontStyle = Font.PLAIN;
+            }
+        }
+
+        if (tag.getStyle().containsKey("font-style") && tag.getStyle().get("font-style") != null) {
+            if (tag.getStyle().get("font-style").getValue().equals("italic")) {
+                fontStyle = Font.ITALIC;
+            }
+            else {
+                fontStyle = Font.PLAIN;
+            }
+        }
+
+        if (tag.getStyle().containsKey("font-size") && tag.getStyle().get("font-size") != null) {
+            fontSize = Math.round(Float.parseFloat(tag.getStyle().get("font-size").getValue().replace("px", "")));
+        }
+
+        if (tag.getStyle().containsKey("color") && tag.getStyle().get("color") != null) {
+            CssColor color = new CssColor(tag.getStyle().get("color").getValue().toUpperCase());
+
+            if (color.isDisplayable()) {
+                textColor = color.getColor();
+            }
+        }
 
         switch (tk) {
-            case "i" -> fontStyle = Font.ITALIC;
-            case "b" -> fontStyle = Font.BOLD;
-            case "small" -> fontSize -= 2;
-            case "big" -> fontSize += 4;
             case "center", "h1" -> isLineCentered = true;
-            case "sup" -> {
-                property = TextRenderingProperty.SUPERSCRIPT;
-                fontSize /= 2;
-            }
+            case "sup" -> property = TextRenderingProperty.SUPERSCRIPT;
             case "abbr" -> fontName = DEFAULT_FONT + " SC";
             case "pre" -> {
                 fontName = MONOSPACE_FONT;
@@ -177,13 +200,9 @@ public class BlockLayout extends Layout {
 
 
         switch (tk) {
-            case "i", "b" -> fontStyle = Font.PLAIN;
-            case "small" -> fontSize += 2;
-            case "big" -> fontSize -= 4;
             case "br", "p", "center", "h1" -> flushLineBuffer();
             case "sup" -> {
                 property = TextRenderingProperty.PLAIN;
-                fontSize *= 2;
             }
             case "abbr" -> fontName = DEFAULT_FONT;
             case "pre" -> {
@@ -213,7 +232,7 @@ public class BlockLayout extends Layout {
                 cursorX += fontSize * direction;
             }
             else {
-                lineBuffer.add(new Text(tk, new Point(cursorX, 0), font, property));
+                lineBuffer.add(new Text(tk, new Point(cursorX, 0), font, property, textColor));
 
                 cursorX += (wordWidth + whitespaceWidth) * direction;
             }
