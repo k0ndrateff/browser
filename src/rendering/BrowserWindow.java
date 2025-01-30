@@ -27,7 +27,7 @@ public class BrowserWindow extends JFrame implements ComponentListener {
     private HtmlParser htmlParser;
     private HtmlNode htmlTreeHead;
     private HtmlDocument htmlDocument;
-    private ArrayList<String> stylesheetUrls;
+    private ArrayList<CssBlock> styles;
     private final RenderingContext renderingContext;
 
     public BrowserWindow() {
@@ -54,7 +54,7 @@ public class BrowserWindow extends JFrame implements ComponentListener {
         this.htmlParser = HtmlParser.create(document);
         this.htmlTreeHead = htmlParser.parse();
 
-        this.stylesheetUrls = HtmlParser.getStylesheetLinkUrls(htmlTreeHead);
+        recalculateStyles();
 
         renderingContext.setPosition(document.isRtl() ? new Point(canvas.getDrawingWidth() - 40, 20) : new Point(20, 20));
         renderingContext.setIsRtl(document.isRtl());
@@ -63,7 +63,17 @@ public class BrowserWindow extends JFrame implements ComponentListener {
     }
 
     private void rerenderCurrentDocument() {
-        ArrayList<CssBlock> styles = Browser.BROWSER_STYLE_SHEET;
+        DocumentLayout layout = new DocumentLayout(htmlTreeHead, renderingContext);
+        layout.render();
+        canvas.setText(layout);
+
+        repaint();
+    }
+
+    private void recalculateStyles() {
+        ArrayList<String> stylesheetUrls = HtmlParser.getStylesheetLinkUrls(htmlTreeHead);
+
+        this.styles = Browser.BROWSER_STYLE_SHEET;
 
         for (String stylesheetUrl : stylesheetUrls) {
             URL url = htmlDocument.getRequestUrl().resolveRelativeURL(stylesheetUrl);
@@ -83,12 +93,6 @@ public class BrowserWindow extends JFrame implements ComponentListener {
         if (htmlTreeHead instanceof HtmlElement) {
             ((HtmlElement) htmlTreeHead).calculateStyle(styles);
         }
-
-        DocumentLayout layout = new DocumentLayout(htmlTreeHead, renderingContext);
-        layout.render();
-        canvas.setText(layout);
-
-        repaint();
     }
 
     @Override
