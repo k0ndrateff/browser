@@ -8,6 +8,7 @@ public class TagSelector extends Selector {
 
     public TagSelector(String tag) {
         this.tag = tag;
+        this.priority = 1;
     }
 
     @Override

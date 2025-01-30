@@ -9,6 +9,8 @@ public class DescendantSelector extends Selector {
     public DescendantSelector(Selector ancestor, Selector descendant) {
         this.ancestor = ancestor;
         this.descendant = descendant;
+
+        this.priority = ancestor.getPriority() + descendant.getPriority();
     }
 
     @Override

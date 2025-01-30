@@ -2,7 +2,7 @@ package rendering.styles;
 
 import java.util.Map;
 
-public class CssBlock {
+public class CssBlock implements Comparable<CssBlock> {
     private final Selector selector;
     private final Map<String, CssRule> rules;
 
@@ -17,5 +17,10 @@ public class CssBlock {
 
     public Map<String, CssRule> getRules() {
         return rules;
+    }
+
+    @Override
+    public int compareTo(CssBlock o) {
+        return selector.getPriority() - o.getSelector().getPriority();
     }
 }

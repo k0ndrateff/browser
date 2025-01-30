@@ -17,6 +17,7 @@ import java.awt.*;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import java.util.ArrayList;
+import java.util.Collections;
 
 public class BrowserWindow extends JFrame implements ComponentListener {
     private static final int WIDTH = 800;
@@ -89,6 +90,9 @@ public class BrowserWindow extends JFrame implements ComponentListener {
             ArrayList<CssBlock> cssBlocks = new CssParser(body).parse();
             styles.addAll(cssBlocks);
         }
+
+        // sort by priorities (cascade style sheets)
+        Collections.sort(styles);
 
         if (htmlTreeHead instanceof HtmlElement) {
             ((HtmlElement) htmlTreeHead).calculateStyle(styles);
