@@ -218,8 +218,6 @@ public class HtmlParser {
     }
 
     private String resolveEntity(String entity) {
-        Logger.verbose("Resolving HTML entity: " + entity);
-
         return switch (entity) {
             case "lt" -> "<";
             case "gt" -> ">";

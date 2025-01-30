@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class CssParser {
-    private static final Character[] SPECIAL_CHARACTERS = new Character[] { '#', '-', '.', '%' };
+    private static final Character[] SPECIAL_CHARACTERS = new Character[] { '#', '-', '.', '%', ',', '"' };
 
     private final String css;
     private int pointer;
@@ -24,9 +24,14 @@ public class CssParser {
 
     private String word() {
         int start = pointer;
+        boolean inQuoted = false;
 
         while (pointer < css.length()) {
-            if (Character.isAlphabetic(css.charAt(pointer)) || Character.isDigit(css.charAt(pointer)) || Arrays.asList(SPECIAL_CHARACTERS).contains(css.charAt(pointer))) {
+            if (css.charAt(pointer) == '"') {
+                inQuoted = !inQuoted;
+            }
+
+            if (inQuoted || Character.isAlphabetic(css.charAt(pointer)) || Character.isDigit(css.charAt(pointer)) || Arrays.asList(SPECIAL_CHARACTERS).contains(css.charAt(pointer))) {
                 pointer++;
             }
             else {

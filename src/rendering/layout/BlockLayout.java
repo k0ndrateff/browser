@@ -31,8 +31,6 @@ public class BlockLayout extends Layout {
     public static final String SOFT_HYPHEN_STRING = Character.toString(0x00AD);
     public static final FontRenderContext FRC = new FontRenderContext(new AffineTransform(), true, false);
     private static final int DEFAULT_LINE_HEIGHT = 20;
-    private static final String DEFAULT_FONT = "SF Pro";
-    private static final String MONOSPACE_FONT = "Courier New";
 
     private final Deque<RenderingComponent> displayList = new ArrayDeque<>();
     private final Deque<Text> lineBuffer = new ArrayDeque<>();
@@ -40,10 +38,10 @@ public class BlockLayout extends Layout {
     private int cursorX;
     private int cursorY;
     private int fontStyle = Font.PLAIN;
-    private int fontSize = 16;
+    private int fontSize;
     private Color textColor = Color.BLACK;
     private boolean isLineCentered = false;
-    private String fontName = DEFAULT_FONT;
+    private String fontName;
     private TextRenderingProperty property = TextRenderingProperty.PLAIN;
 
     public BlockLayout(HtmlNode node, Layout parent, Layout previous, RenderingContext ctx) {
@@ -190,13 +188,19 @@ public class BlockLayout extends Layout {
             }
         }
 
+        if (tag.getStyle().containsKey("font-family") && tag.getStyle().get("font-family") != null) {
+            String[] families = tag.getStyle().get("font-family").getValue().split(",");
+
+            for (String family : families) {
+                if (FontCache.isFontFamilyAvailable(family.replaceAll("\"", ""))) {
+                    fontName = family.replaceAll("\"", "");
+                }
+            }
+        }
+
         switch (tk) {
             case "sup" -> property = TextRenderingProperty.SUPERSCRIPT;
-            case "abbr" -> fontName = DEFAULT_FONT + " SC";
-            case "pre" -> {
-                fontName = MONOSPACE_FONT;
-                property = TextRenderingProperty.PREFORMATTED;
-            }
+            case "pre" -> property = TextRenderingProperty.PREFORMATTED;
             case "li" -> cursorX += 2 * fontSize;
             case null, default -> {
             }
@@ -209,14 +213,7 @@ public class BlockLayout extends Layout {
 
         switch (tk) {
             case "br", "p" -> flushLineBuffer();
-            case "sup" -> {
-                property = TextRenderingProperty.PLAIN;
-            }
-            case "abbr" -> fontName = DEFAULT_FONT;
-            case "pre" -> {
-                fontName = DEFAULT_FONT;
-                property = TextRenderingProperty.PLAIN;
-            }
+            case "sup", "pre" -> property = TextRenderingProperty.PLAIN;
             case "li" -> cursorX -= 2 * fontSize;
             case null, default -> {
             }

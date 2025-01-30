@@ -8,3 +8,5 @@ big { font-size: 110%; }
 sup { font-size: 50%; }
 h1 { text-align: center; }
 center { text-align: center; }
+abbr { font-family: "SF Compact", sans-serif; }
+pre { font-family: "Courier New", monospace; }

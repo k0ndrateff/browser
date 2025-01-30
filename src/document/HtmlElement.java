@@ -140,6 +140,7 @@ public class HtmlElement extends HtmlNode {
         props.put("font-size", "16px");
         props.put("font-style", "normal");
         props.put("font-weight", "normal");
+        props.put("font-family", "sans-serif");
         props.put("color", "black");
 
         return props;

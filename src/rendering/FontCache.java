@@ -2,6 +2,7 @@ package rendering;
 
 import java.awt.*;
 import java.util.HashMap;
+import java.util.Objects;
 
 public class FontCache {
     private static final HashMap<String, Font> fontCache = new HashMap<>();
@@ -23,5 +24,21 @@ public class FontCache {
         else {
             return fontCache.get(key);
         }
+    }
+
+    public static boolean isFontFamilyAvailable(String fontName) {
+        if (Objects.equals(fontName, "sans-serif") || Objects.equals(fontName, "serif") || Objects.equals(fontName, "monospace"))
+            return true;
+
+        GraphicsEnvironment g = GraphicsEnvironment.getLocalGraphicsEnvironment();
+        String[] fonts = g.getAvailableFontFamilyNames();
+
+        for (String font : fonts) {
+            if (font.equals(fontName)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
