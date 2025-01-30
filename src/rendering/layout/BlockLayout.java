@@ -181,8 +181,16 @@ public class BlockLayout extends Layout {
             }
         }
 
+        if (tag.getStyle().containsKey("text-align") && tag.getStyle().get("text-align") != null) {
+            if (tag.getStyle().get("text-align").getValue().equals("center")) {
+                isLineCentered = true;
+            }
+            else {
+                flushLineBuffer();
+            }
+        }
+
         switch (tk) {
-            case "center", "h1" -> isLineCentered = true;
             case "sup" -> property = TextRenderingProperty.SUPERSCRIPT;
             case "abbr" -> fontName = DEFAULT_FONT + " SC";
             case "pre" -> {
@@ -200,7 +208,7 @@ public class BlockLayout extends Layout {
 
 
         switch (tk) {
-            case "br", "p", "center", "h1" -> flushLineBuffer();
+            case "br", "p" -> flushLineBuffer();
             case "sup" -> {
                 property = TextRenderingProperty.PLAIN;
             }

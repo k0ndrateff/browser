@@ -6,3 +6,5 @@ b { font-weight: bold; }
 small { font-size: 90%; }
 big { font-size: 110%; }
 sup { font-size: 50%; }
+h1 { text-align: center; }
+center { text-align: center; }
