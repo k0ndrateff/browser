@@ -1,5 +1,8 @@
 package networking;
 
+import java.util.Arrays;
+import java.util.List;
+
 public class URL {
     private final String url;
 
@@ -47,6 +50,49 @@ public class URL {
         }
         else if (scheme.equals(UrlScheme.FILE)) {
             parseFileUrl(restUrl);
+        }
+    }
+
+    public URL resolveRelativeURL(String url) {
+        if (url.contains("://")) {
+            return new URL(url);
+        }
+        else if (!url.startsWith("/")) {
+            String dir;
+
+            List<String> dirPartsList = Arrays.asList(this.path.split("/"));
+            String[] dirParts = dirPartsList.subList(0, dirPartsList.size() - 1).toArray(new String[] {});
+            StringBuilder dirBuilder = new StringBuilder();
+            for (String dirPart : dirParts) {
+                dirBuilder.append(dirPart).append("/");
+            }
+
+            dir = dirBuilder.toString();
+
+            while (url.startsWith("../")) {
+                String[] parts = url.split("/", 2);
+                url = parts[1];
+
+                if (dir.contains("/")) {
+                    dirPartsList = Arrays.asList(dir.split("/"));
+                    dirParts = dirPartsList.subList(0, dirPartsList.size() - 1).toArray(new String[] {});
+                    dirBuilder = new StringBuilder();
+                    for (String dirPart : dirParts) {
+                        dirBuilder.append(dirPart).append("/");
+                    }
+
+                    dir = dirBuilder.toString();
+                }
+            }
+
+            url = dir + url;
+        }
+
+        if (url.startsWith("//")) {
+            return new URL(this.scheme + ":" + url);
+        }
+        else {
+            return new URL(this.scheme + "://" + this.host + ":" + this.port + url);
         }
     }
 

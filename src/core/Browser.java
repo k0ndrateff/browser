@@ -2,11 +2,9 @@ package core;
 
 import document.HtmlDocument;
 import error.Logger;
-import error.NotImplementedException;
 import networking.request.Request;
 import networking.URL;
 import networking.request.http.HttpCache;
-import networking.response.FileResponse;
 import rendering.BrowserWindow;
 import rendering.styles.CssBlock;
 import rendering.styles.CssParser;

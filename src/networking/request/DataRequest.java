@@ -15,11 +15,11 @@ public class DataRequest extends Request {
         Logger.verbose("Making data request...");
 
         if (this.url.isAboutBlank()) {
-            return new DataResponse(new HtmlDocument(""), "text/html");
+            return new DataResponse(new HtmlDocument("", url), "text/html");
         }
 
         String[] parts = this.url.getPath().split(",", 2);
 
-        return new DataResponse(new HtmlDocument(parts[1]), parts[0]);
+        return new DataResponse(new HtmlDocument(parts[1], url), parts[0]);
     }
 }

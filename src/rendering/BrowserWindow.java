@@ -5,12 +5,18 @@ import document.HtmlDocument;
 import document.HtmlElement;
 import document.HtmlNode;
 import document.HtmlParser;
+import error.Logger;
+import networking.request.Request;
 import rendering.layout.DocumentLayout;
+import rendering.styles.CssBlock;
+import networking.*;
+import rendering.styles.CssParser;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
+import java.util.ArrayList;
 
 public class BrowserWindow extends JFrame implements ComponentListener {
     private static final int WIDTH = 800;
@@ -20,6 +26,8 @@ public class BrowserWindow extends JFrame implements ComponentListener {
 
     private HtmlParser htmlParser;
     private HtmlNode htmlTreeHead;
+    private HtmlDocument htmlDocument;
+    private ArrayList<String> stylesheetUrls;
     private final RenderingContext renderingContext;
 
     public BrowserWindow() {
@@ -42,8 +50,11 @@ public class BrowserWindow extends JFrame implements ComponentListener {
     }
 
     public void renderHtmlDocument(HtmlDocument document) {
+        this.htmlDocument = document;
         this.htmlParser = HtmlParser.create(document);
         this.htmlTreeHead = htmlParser.parse();
+
+        this.stylesheetUrls = HtmlParser.getStylesheetLinkUrls(htmlTreeHead);
 
         renderingContext.setPosition(document.isRtl() ? new Point(canvas.getDrawingWidth() - 40, 20) : new Point(20, 20));
         renderingContext.setIsRtl(document.isRtl());
@@ -52,8 +63,25 @@ public class BrowserWindow extends JFrame implements ComponentListener {
     }
 
     private void rerenderCurrentDocument() {
+        ArrayList<CssBlock> styles = Browser.BROWSER_STYLE_SHEET;
+
+        for (String stylesheetUrl : stylesheetUrls) {
+            URL url = htmlDocument.getRequestUrl().resolveRelativeURL(stylesheetUrl);
+            String body = "";
+
+            try {
+                body = ((HtmlDocument) Request.create(url).make().getData()).getContent();
+            }
+            catch (Exception e) {
+                Logger.error(e);
+            }
+
+            ArrayList<CssBlock> cssBlocks = new CssParser(body).parse();
+            styles.addAll(cssBlocks);
+        }
+
         if (htmlTreeHead instanceof HtmlElement) {
-            ((HtmlElement) htmlTreeHead).calculateStyle(Browser.BROWSER_STYLE_SHEET);
+            ((HtmlElement) htmlTreeHead).calculateStyle(styles);
         }
 
         DocumentLayout layout = new DocumentLayout(htmlTreeHead, renderingContext);

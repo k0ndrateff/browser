@@ -2,6 +2,7 @@ package document;
 
 import error.Logger;
 import rendering.layout.BlockLayout;
+import utility.TreeUtil;
 
 import java.util.*;
 
@@ -28,6 +29,21 @@ public class HtmlParser {
 
     public HtmlDocument getDocument() {
         return document;
+    }
+
+    public static ArrayList<String> getStylesheetLinkUrls(HtmlNode node) {
+        ArrayList<String> urls = new ArrayList<>();
+        ArrayList<HtmlNode> nodeList = new TreeUtil<HtmlNode>().toList(node, new ArrayList<>());
+
+        for (HtmlNode child : nodeList) {
+            if (child instanceof HtmlElement && Objects.equals(child.toString(), "link") && Objects.equals(((HtmlElement) child).getAttributes().get("rel"), "stylesheet") && ((HtmlElement) child).getAttributes().containsKey("href")) {
+                urls.add(((HtmlElement) child).getAttributes().get("href"));
+            }
+        }
+
+        Logger.verbose("Found " + urls.size() + " external stylesheet links");
+
+        return urls;
     }
 
     public HtmlNode parse() {

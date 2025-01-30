@@ -56,7 +56,7 @@ public class HttpResponse extends Response<HtmlDocument> {
     }
 
     public void setBody(String body) {
-        this.body = new HtmlDocument(body);
+        this.body = new HtmlDocument(body, url);
         this.isPending = false;
     }
 
