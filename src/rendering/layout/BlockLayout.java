@@ -129,6 +129,22 @@ public class BlockLayout extends Layout {
                 displayList.add(new Rectangle(new Point(this.x, this.y), this.width, this.height, bgColor.getColor()));
             }
         }
+
+        if (this.node instanceof HtmlElement && ((HtmlElement) this.node).getStyle().containsKey("width")) {
+            String widthString = ((HtmlElement) this.node).getStyle().get("width").getValue();
+
+            if (widthString != null && !widthString.equals("auto") && widthString.contains("px")) {
+                this.width = Integer.parseInt(widthString.replace("px", ""));
+            }
+        }
+
+        if (this.node instanceof HtmlElement && ((HtmlElement) this.node).getStyle().containsKey("height")) {
+            String heightString = ((HtmlElement) this.node).getStyle().get("height").getValue();
+
+            if (heightString != null && !heightString.equals("auto") && heightString.contains("px")) {
+                this.height = Integer.parseInt(heightString.replace("px", ""));
+            }
+        }
     }
 
     private void traverseTree(HtmlNode node) {
