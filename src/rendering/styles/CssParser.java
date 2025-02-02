@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class CssParser {
-    private static final Character[] SPECIAL_CHARACTERS = new Character[] { '#', '-', '.', '%', ',', '"' };
+    private static final Character[] SPECIAL_CHARACTERS = new Character[] { '#', '-', '.', '%', ',', '"', '!' };
 
     private final String css;
     private int pointer;
@@ -56,7 +56,7 @@ public class CssParser {
         }
 
         if (!(pointer > start)) {
-            throw new IllegalStateException("CSS word parsing error");
+            throw new IllegalStateException("CSS value parsing error");
         }
 
         return css.substring(start, pointer);
@@ -181,7 +181,20 @@ public class CssParser {
                 whitespace();
                 Map<String, CssRule> pairs = body();
                 literal('}');
+
+                Map<String, CssRule> importantPairs = new HashMap<>();
+
+                pairs.forEach((prop, rule) -> {
+                    if (rule.getValue().endsWith("!important")) {
+                        importantPairs.put(prop, new CssRule(prop, rule.getValue().substring(0, rule.getValue().length() - 11)));
+                    }
+                });
+
                 blocks.add(new CssBlock(selector, pairs));
+
+                if (!importantPairs.isEmpty()) {
+                    blocks.add(new CssBlock(selector.setPriority(10000), importantPairs));
+                }
             }
             catch (Exception e) {
                 Character why = ignoreUntil(new Character[] { '}' });

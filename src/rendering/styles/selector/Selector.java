@@ -9,5 +9,11 @@ public abstract class Selector {
         return priority;
     }
 
+    public Selector setPriority(int priority) {
+        this.priority = priority;
+
+        return this;
+    }
+
     public abstract boolean matches(HtmlNode node);
 }
