@@ -19,15 +19,6 @@ import java.util.*;
 import java.util.stream.Stream;
 
 public class BlockLayout extends Layout {
-    private static final String[] BLOCK_ELEMENTS = new String[] {
-            "html", "body", "article", "section", "nav", "aside",
-            "h1", "h2", "h3", "h4", "h5", "h6", "hgroup", "header",
-            "footer", "address", "p", "hr", "pre", "blockquote",
-            "ol", "ul", "menu", "li", "dl", "dt", "dd", "figure",
-            "figcaption", "main", "div", "table", "form", "fieldset",
-            "legend", "details", "summary"
-    };
-
     public static final String SOFT_HYPHEN_STRING = Character.toString(0x00AD);
     public static final FontRenderContext FRC = new FontRenderContext(new AffineTransform(), true, false);
     private static final int DEFAULT_LINE_HEIGHT = 20;
@@ -52,7 +43,7 @@ public class BlockLayout extends Layout {
         if (node instanceof HtmlText) {
             return DisplayMode.INLINE;
         }
-        else if (node.getChildren().stream().anyMatch(child -> child instanceof HtmlElement && Arrays.asList(BLOCK_ELEMENTS).contains(child.toString()))) {
+        else if (node.getChildren().stream().anyMatch(child -> child instanceof HtmlElement && ((HtmlElement) child).getStyle().containsKey("display") && Objects.equals(((HtmlElement) child).getStyle().get("display").getValue(), "block"))) {
             return DisplayMode.BLOCK;
         }
         else if (!node.getChildren().isEmpty()) {
