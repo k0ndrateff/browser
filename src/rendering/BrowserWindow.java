@@ -11,13 +11,13 @@ import rendering.layout.DocumentLayout;
 import rendering.styles.CssBlock;
 import networking.*;
 import rendering.styles.CssParser;
+import rendering.styles.CssRule;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.*;
 
 public class BrowserWindow extends JFrame implements ComponentListener {
     private static final int WIDTH = 800;
@@ -91,12 +91,48 @@ public class BrowserWindow extends JFrame implements ComponentListener {
             styles.addAll(cssBlocks);
         }
 
+        this.styles = unpackShorthandStyles(styles);
+
         // sort by priorities (cascade style sheets)
         Collections.sort(styles);
 
         if (htmlTreeHead instanceof HtmlElement) {
             ((HtmlElement) htmlTreeHead).calculateStyle(styles);
         }
+    }
+
+    private ArrayList<CssBlock> unpackShorthandStyles(ArrayList<CssBlock> styles) {
+        ArrayList<CssBlock> newStyles = new ArrayList<>();
+
+        for (CssBlock cssBlock : styles) {
+            Map<String, CssRule> newCssRules = new HashMap<>();
+
+            for (Map.Entry<String, CssRule> rule : cssBlock.getRules().entrySet()) {
+                if (Objects.equals(rule.getKey(), "font")) {
+                    String[] fontStyles = rule.getValue().getValue().split(" ");
+
+                    if (fontStyles.length < 4) continue;
+
+                    String fontStyle = fontStyles[0];
+                    String fontWeight = fontStyles[1];
+                    String fontSize = fontStyles[2];
+                    String fontFamily = fontStyles[3];
+
+                    newCssRules.put("font-style", new CssRule("font-style", fontStyle));
+                    newCssRules.put("font-weight", new CssRule("font-weight", fontWeight));
+                    newCssRules.put("font-size", new CssRule("font-size", fontSize));
+                    newCssRules.put("font-family", new CssRule("font-family", fontFamily));
+                }
+                else {
+                    newCssRules.put(rule.getKey(), rule.getValue());
+                }
+            }
+
+            CssBlock newBlock = new CssBlock(cssBlock.getSelector(), newCssRules);
+            newStyles.add(newBlock);
+        }
+
+        return newStyles;
     }
 
     @Override

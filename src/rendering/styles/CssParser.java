@@ -24,16 +24,28 @@ public class CssParser {
 
     private String word() {
         int start = pointer;
-        boolean inQuoted = false;
 
         while (pointer < css.length()) {
-            if (css.charAt(pointer) == '"') {
-                inQuoted = !inQuoted;
+            if (Character.isAlphabetic(css.charAt(pointer)) || Character.isDigit(css.charAt(pointer)) || Arrays.asList(SPECIAL_CHARACTERS).contains(css.charAt(pointer))) {
                 pointer++;
-                continue;
             }
+            else {
+                break;
+            }
+        }
 
-            if (inQuoted || Character.isAlphabetic(css.charAt(pointer)) || Character.isDigit(css.charAt(pointer)) || Arrays.asList(SPECIAL_CHARACTERS).contains(css.charAt(pointer))) {
+        if (!(pointer > start)) {
+            throw new IllegalStateException("CSS word parsing error");
+        }
+
+        return css.substring(start, pointer);
+    }
+
+    private String value() {
+        int start = pointer;
+
+        while (pointer < css.length()) {
+            if (Character.isAlphabetic(css.charAt(pointer)) || Character.isDigit(css.charAt(pointer)) || Character.isWhitespace(css.charAt(pointer)) ||  Arrays.asList(SPECIAL_CHARACTERS).contains(css.charAt(pointer))) {
                 pointer++;
             }
             else {
@@ -61,7 +73,7 @@ public class CssParser {
         whitespace();
         literal(':');
         whitespace();
-        String value = word();
+        String value = value();
         return new CssRule(property, value);
     }
 
