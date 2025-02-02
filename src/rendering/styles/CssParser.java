@@ -1,5 +1,7 @@
 package rendering.styles;
 
+import rendering.styles.selector.*;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -125,6 +127,15 @@ public class CssParser {
         if (selector.startsWith(".")) {
             out = new ClassSelector(selector.substring(1));
         }
+        else if (selector.contains(".")) {
+            String[] parts = selector.split("\\.");
+            Selector[] selectors = new Selector[parts.length];
+            selectors[0] = new TagSelector(parts[0]);
+            for (int i = 1; i < parts.length; i++) {
+                selectors[i] = new ClassSelector(parts[i]);
+            }
+            out = new SelectorSequence(selectors);
+        }
         else {
             out = new TagSelector(selector);
         }
@@ -138,6 +149,15 @@ public class CssParser {
 
             if (selector.startsWith(".")) {
                 descendant = new ClassSelector(selector.substring(1));
+            }
+            else if (selector.contains(".")) {
+                String[] parts = selector.split("\\.");
+                Selector[] selectors = new Selector[parts.length];
+                selectors[0] = new TagSelector(parts[0]);
+                for (int i = 1; i < parts.length; i++) {
+                    selectors[i] = new ClassSelector(parts[i]);
+                }
+                descendant = new SelectorSequence(selectors);
             }
             else {
                 descendant = new TagSelector(selector);

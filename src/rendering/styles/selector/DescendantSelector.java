@@ -1,4 +1,4 @@
-package rendering.styles;
+package rendering.styles.selector;
 
 import document.HtmlNode;
 

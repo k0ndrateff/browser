@@ -1,5 +1,7 @@
 package rendering.styles;
 
+import rendering.styles.selector.Selector;
+
 import java.util.Map;
 
 public class CssBlock implements Comparable<CssBlock> {
