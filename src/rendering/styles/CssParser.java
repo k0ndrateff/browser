@@ -122,10 +122,29 @@ public class CssParser {
     private Selector selector() {
         String selector = word().toLowerCase();
 
-        Selector out;
+        Selector out = resolveSelector(selector);
 
-        if (selector.startsWith(".")) {
-            out = new ClassSelector(selector.substring(1));
+        whitespace();
+
+        while (pointer < css.length() && css.charAt(pointer) != '{') {
+            selector = word().toLowerCase();
+
+            Selector descendant = resolveSelector(selector);
+
+            out = new DescendantSelector(out, descendant);
+            whitespace();
+        }
+
+        return out;
+    }
+
+    private Selector resolveSelector(String selector) {
+        if (selector.contains(":has")) {
+            String[] parts = selector.split(":has");
+            return new SelectorSequence(new Selector[]{resolveSelector(parts[0]), new HasSelector(resolveSelector(parts[1].substring(1, parts[1].length() - 1)))});
+        }
+        else if (selector.startsWith(".")) {
+            return new ClassSelector(selector.substring(1));
         }
         else if (selector.contains(".")) {
             String[] parts = selector.split("\\.");
@@ -134,40 +153,11 @@ public class CssParser {
             for (int i = 1; i < parts.length; i++) {
                 selectors[i] = new ClassSelector(parts[i]);
             }
-            out = new SelectorSequence(selectors);
+            return new SelectorSequence(selectors);
         }
         else {
-            out = new TagSelector(selector);
+            return new TagSelector(selector);
         }
-
-        whitespace();
-
-        while (pointer < css.length() && css.charAt(pointer) != '{') {
-            selector = word().toLowerCase();
-
-            Selector descendant;
-
-            if (selector.startsWith(".")) {
-                descendant = new ClassSelector(selector.substring(1));
-            }
-            else if (selector.contains(".")) {
-                String[] parts = selector.split("\\.");
-                Selector[] selectors = new Selector[parts.length];
-                selectors[0] = new TagSelector(parts[0]);
-                for (int i = 1; i < parts.length; i++) {
-                    selectors[i] = new ClassSelector(parts[i]);
-                }
-                descendant = new SelectorSequence(selectors);
-            }
-            else {
-                descendant = new TagSelector(selector);
-            }
-
-            out = new DescendantSelector(out, descendant);
-            whitespace();
-        }
-
-        return out;
     }
 
     public ArrayList<CssBlock> parse() {
