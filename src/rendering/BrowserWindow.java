@@ -6,6 +6,7 @@ import document.HtmlElement;
 import document.HtmlNode;
 import document.HtmlParser;
 import error.Logger;
+import error.Performance;
 import networking.request.Request;
 import rendering.layout.DocumentLayout;
 import rendering.styles.CssBlock;
@@ -64,14 +65,19 @@ public class BrowserWindow extends JFrame implements ComponentListener {
     }
 
     private void rerenderCurrentDocument() {
+        Performance.start("Rendering");
         DocumentLayout layout = new DocumentLayout(htmlTreeHead, renderingContext);
         layout.render();
         canvas.setText(layout);
+        Performance.measure("Rendering");
 
+        Performance.start("Painting");
         repaint();
+        Performance.measure("Painting");
     }
 
     private void recalculateStyles() {
+        Performance.start("Style recalculation");
         ArrayList<String> stylesheetUrls = HtmlParser.getStylesheetLinkUrls(htmlTreeHead);
 
         this.styles = Browser.BROWSER_STYLE_SHEET;
@@ -103,6 +109,8 @@ public class BrowserWindow extends JFrame implements ComponentListener {
         if (htmlTreeHead instanceof HtmlElement) {
             ((HtmlElement) htmlTreeHead).calculateStyle(styles);
         }
+
+        Performance.measure("Style recalculation");
     }
 
     private ArrayList<CssBlock> unpackShorthandStyles(ArrayList<CssBlock> styles) {

@@ -1,6 +1,7 @@
 package document;
 
 import error.Logger;
+import error.Performance;
 import rendering.layout.BlockLayout;
 import utility.TreeUtil;
 
@@ -48,6 +49,7 @@ public class HtmlParser {
 
     public HtmlNode parse() {
         Logger.verbose("Parsing HTML Tree...");
+        Performance.start("HTML parsing");
 
         boolean inTag = false;
         boolean inQuotedAttribute = false;
@@ -182,6 +184,8 @@ public class HtmlParser {
             HtmlNode parent = this.unfinishedNodes.peek();
             parent.appendChildren(node);
         }
+
+        Performance.measure("HTML parsing");
 
         return this.unfinishedNodes.pop();
     }
