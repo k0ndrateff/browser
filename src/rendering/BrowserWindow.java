@@ -76,6 +76,10 @@ public class BrowserWindow extends JFrame implements ComponentListener {
 
         this.styles = Browser.BROWSER_STYLE_SHEET;
 
+        HtmlElement headNode = (HtmlElement) htmlTreeHead.getChildren().getFirst();
+
+        styles.addAll(getInlineStyles(headNode));
+
         for (String stylesheetUrl : stylesheetUrls) {
             URL url = htmlDocument.getRequestUrl().resolveRelativeURL(stylesheetUrl);
             String body = "";
@@ -133,6 +137,18 @@ public class BrowserWindow extends JFrame implements ComponentListener {
         }
 
         return newStyles;
+    }
+
+    private ArrayList<CssBlock> getInlineStyles(HtmlElement headNode) {
+        ArrayList<CssBlock> styles = new ArrayList<>();
+
+        for (HtmlNode node : headNode.getChildren()) {
+            if (node.toString().equals("style") && node.getChildren().size() == 1) {
+                styles.addAll(new CssParser(node.getChildren().getFirst().toString()).parse());
+            }
+        }
+
+        return styles;
     }
 
     @Override
