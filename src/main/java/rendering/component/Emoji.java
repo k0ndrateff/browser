@@ -10,7 +10,6 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -30,17 +29,17 @@ public class Emoji extends RenderingComponent {
     public static boolean isEmoji(String ch) {
         int[] codePoints = ch.codePoints().toArray();
 
-        Set<java.lang.Character.UnicodeBlock> emojiBlocks = Set.of(
-                java.lang.Character.UnicodeBlock.EMOTICONS,
-                java.lang.Character.UnicodeBlock.MISCELLANEOUS_SYMBOLS_AND_PICTOGRAPHS,
-                java.lang.Character.UnicodeBlock.SUPPLEMENTAL_SYMBOLS_AND_PICTOGRAPHS,
-                java.lang.Character.UnicodeBlock.TRANSPORT_AND_MAP_SYMBOLS
+        Set<Character.UnicodeBlock> emojiBlocks = Set.of(
+                Character.UnicodeBlock.EMOTICONS,
+                Character.UnicodeBlock.MISCELLANEOUS_SYMBOLS_AND_PICTOGRAPHS,
+                Character.UnicodeBlock.SUPPLEMENTAL_SYMBOLS_AND_PICTOGRAPHS,
+                Character.UnicodeBlock.TRANSPORT_AND_MAP_SYMBOLS
         );
 
         boolean isEmoji = false;
         for (int codePoint : codePoints) {
-            if (emojiBlocks.contains(java.lang.Character.UnicodeBlock.of(codePoint)) ||
-                    java.lang.Character.getType(codePoint) == java.lang.Character.OTHER_SYMBOL) {
+            if (emojiBlocks.contains(Character.UnicodeBlock.of(codePoint)) ||
+                    Character.getType(codePoint) == Character.OTHER_SYMBOL) {
                 isEmoji = true;
             }
         }
@@ -60,27 +59,33 @@ public class Emoji extends RenderingComponent {
                 .collect(Collectors.joining("-"));
     }
 
-    private File getFile() {
-        return new File(Objects.requireNonNull(Browser.class.getClassLoader().getResource(EMOJI_DIR + getEmojiCode() + ".png")).getFile());
+    private String getFile() throws IOException {
+        return Browser.getResource(EMOJI_DIR + getEmojiCode() + ".png");
     }
 
     @Override
     public void paint(Graphics g, PaintingContext ctx) {
-        File file = getFile();
+        String emojiFile = "";
 
-        if (!file.exists()) {
-            Logger.verbose("Emoji from file " + file.getAbsolutePath() + "  not found! Rendering as text instead...");
+        try {
+            emojiFile = getFile();
+        } catch (IOException e) {
+            Logger.error(e);
+        }
 
-            g.drawString(String.valueOf(emoji), position.x, position.y - ctx.getScrollY());
+        if (emojiFile.isEmpty()) {
+            Logger.verbose("Emoji from file " + getEmojiCode() + "  not found! Rendering as text instead...");
+
+            g.drawString(String.valueOf(emoji), position.x, position.y + 28 - ctx.getScrollY());
         }
         else {
             try {
-                BufferedImage img = ImageIO.read(file);
+                BufferedImage img = ImageIO.read(new File(emojiFile));
 
-                g.drawImage(img, position.x, position.y - ctx.getScrollY(), size, size, null);
+                g.drawImage(img, position.x, position.y + 28 - ctx.getScrollY(), size, size, null);
             } catch (IOException e) {
                 Logger.error(e);
-                g.drawString(String.valueOf(emoji), position.x, position.y - ctx.getScrollY());
+                g.drawString(String.valueOf(emoji), position.x, position.y + 28 - ctx.getScrollY());
             }
         }
     }
