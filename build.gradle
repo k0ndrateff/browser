@@ -1,0 +1,18 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+application {
+    mainClass = 'core.Browser'
+    version = '0.1.0'
+}
+
+jar {
+    manifest {
+        attributes(
+                'Main-Class': 'core.Browser',
+                'Implementation-Version': project.version
+        )
+    }
+}

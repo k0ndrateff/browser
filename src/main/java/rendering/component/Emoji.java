@@ -1,5 +1,6 @@
 package rendering.component;
 
+import core.Browser;
 import error.Logger;
 import rendering.PaintingContext;
 
@@ -9,6 +10,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -59,7 +61,7 @@ public class Emoji extends RenderingComponent {
     }
 
     private File getFile() {
-        return new File(EMOJI_DIR, getEmojiCode() + ".png");
+        return new File(Objects.requireNonNull(Browser.class.getClassLoader().getResource(EMOJI_DIR + getEmojiCode() + ".png")).getFile());
     }
 
     @Override
@@ -75,7 +77,6 @@ public class Emoji extends RenderingComponent {
             try {
                 BufferedImage img = ImageIO.read(file);
 
-                // TODO: emoji is aligned incorrectly, need to deal with this somehow
                 g.drawImage(img, position.x, position.y - ctx.getScrollY(), size, size, null);
             } catch (IOException e) {
                 Logger.error(e);
